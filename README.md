@@ -44,9 +44,14 @@ It is recommended to create a virtual environment to manage dependencies for thi
 cd Instrument_Management_System
 ```
 
-```bash
-python -m venv env
-```
+- On Windows:
+  ```bash
+  python -m venv env
+  
+- On macOS/Linux:
+  ```bash
+  python3 -m venv env
+  ```
 
 ### Step 3: Activate Environment
 
@@ -66,7 +71,7 @@ Once the virtual environment is created, activate it using:
 With your virtual environment activated, install the required packages listed in `requirements.txt`:
 
 ```bash
-pip install -r requirements.txt
+pip install -r Requirements.txt
 ```
 
 ### Step 5: Run the Python Program
@@ -79,7 +84,7 @@ After installing all dependencies, you can run the application using:
   
 - On macOS/Linux:
   ```bash
-  python3 .\manage.py runserver
+  python3 manage.py runserver
   
 ## Contributing
 
