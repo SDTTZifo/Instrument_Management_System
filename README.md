@@ -17,3 +17,12 @@
       env/Scripts/activate
 #### Linux
       source env/bin/activate
+
+### Step 4: Install Required References
+      pip install -m Requirements.txt
+
+### Step 5: Run the Python program
+#### Windows
+      py manage.py runserver
+#### Linux
+      python3 manage.py runserver
