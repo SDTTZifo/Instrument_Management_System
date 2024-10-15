@@ -25,14 +25,28 @@ Before you begin, ensure you have the following installed on your machine:
 
 To get a local copy of the project, you need to clone it using Git. This will create a directory named `Instrument_Management_System` on your machine.
 
-      git clone https://github.com/SDTTZifo/Instrument_Management_System.git
+```bash
+git clone https://github.com/SDTTZifo/Instrument_Management_System.git
+```
+##### Username :
+```text
+SDTTZifo 
+```
+##### Key :
+```text
+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
+```
 
 ### Step 2: Create Environment
 
 It is recommended to create a virtual environment to manage dependencies for this project. You can create a virtual environment using the following command:
+```bash
+cd Instrument_Management_System
+```
 
-      cd Instrument_Management_System
-      python -m venv env
+```bash
+python -m venv env
+```
 
 ### Step 3: Activate Environment
 
