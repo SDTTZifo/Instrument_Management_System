@@ -89,7 +89,7 @@ After installing all dependencies, you can run the application using:
 Navigate to below URL.
   
   ```url
-  http://localhost:8000/admin
+  http://localhost:8000
   ```
 
    #### 5.1. Create a Superuser (Optional)
