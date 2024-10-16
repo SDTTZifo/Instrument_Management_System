@@ -86,6 +86,12 @@ After installing all dependencies, you can run the application using:
   ```bash
   python3 manage.py runserver
   ```
+Navigate to below URL.
+  
+  ```url
+  http://localhost:8000/admin
+  ```
+
    #### 5.1. Create a Superuser (Optional)
    
    If you need to create a superuser to access the Django admin, run:
