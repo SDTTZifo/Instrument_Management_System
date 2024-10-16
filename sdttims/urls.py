@@ -6,4 +6,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('Inventory/', include('Inventory.urls')),   
     path('Booking/', include('Booking.urls')),
+    #path('logout/',auth_views.Logoutview.as_view(),name='logout'),
 ]
