@@ -92,14 +92,14 @@ Navigate to below URL.
   http://localhost:8000
   ```
 
-   #### 5.1. Create a Superuser (Optional)
+   ##### 5.1. Create a Superuser (Optional)
    
    If you need to create a superuser to access the Django admin, run:
    
    ```bash
    python manage.py createsuperuser
    ```
-   ### 5.2. Access the Django Admin
+   ##### 5.2. Access the Django Admin
 
    To log in to the Django admin, use the following credentials:
    
