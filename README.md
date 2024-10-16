@@ -97,10 +97,19 @@ After installing all dependencies, you can run the application using:
 
    To log in to the Django admin, use the following credentials:
    
-   - **Username:** admin
-   - **Password:** Password@123
+   - **Username:**
+     
+      ```text
+      admin
+      ```
+   - **Password:**
+     
+       ```text
+       Password@123
+       ```
    
-   Navigate to below URL to access the admin panel.
+  Navigate to below URL to access the admin panel.
+  
   ```url
   http://localhost:8000/admin
   ```
