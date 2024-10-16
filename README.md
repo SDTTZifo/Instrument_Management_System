@@ -32,7 +32,7 @@ git clone https://github.com/SDTTZifo/Instrument_Management_System.git
 ```text
 SDTTZifo 
 ```
-##### Key :
+##### Private Key :
 ```text
 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
 ```
@@ -85,7 +85,26 @@ After installing all dependencies, you can run the application using:
 - On macOS/Linux:
   ```bash
   python3 manage.py runserver
-  
+  ```
+   #### 5.1. Create a Superuser (Optional)
+   
+   If you need to create a superuser to access the Django admin, run:
+   
+   ```bash
+   python manage.py createsuperuser
+   ```
+   ### 5.2. Access the Django Admin
+
+   To log in to the Django admin, use the following credentials:
+   
+   - **Username:** admin
+   - **Password:** Password@123
+   
+   Navigate to below URL to access the admin panel.
+  ```url
+  http://localhost:8000/admin
+  ```
+
 ## Contributing
 
 Fellow Zifoites! 
