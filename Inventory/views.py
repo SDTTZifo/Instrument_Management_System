@@ -12,6 +12,7 @@ def instruments_view(request):
     return render(request, 'instruments/instruments.html', {'instruments': instruments})
 
 def add_instrument_view(request):
+    categories = Category.objects.all()
     if request.method == 'POST':
         instrument_name = request.POST.get('instrument_name')
         instrument_description = request.POST.get('instrument_description')
@@ -27,7 +28,7 @@ def add_instrument_view(request):
 
         return redirect('instruments')  # Redirect to instruments view after saving
 
-    return render(request, 'instruments/add_instrument.html')
+    return render(request, 'instruments/add_instrument.html', {'categories': categories})
 
 def category_view(request):
     categories = Category.objects.all()  # Retrieve all instrument records
