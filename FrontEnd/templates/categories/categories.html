@@ -13,7 +13,6 @@
             <a href="{% url 'add_category' %}" class="btn btn-success">Add Category</a>
         </div>
       
-
         <table class="table table-striped mt-4">
             <thead>
                 <tr>
@@ -26,6 +25,10 @@
                 <tr>
                     <td>{{ category.category_name }}</td>
                     <td>{{ category.category_description }}</td>
+                    <td>
+                        <a href="{% url 'edit_category' category.id %}" class="btn btn-warning">Edit</a>  <!-- Edit button -->
+                        <a href="{% url 'delete_category' category.id %}" class="btn btn-danger">Delete</a>  <!-- Delete button -->
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>

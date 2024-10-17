@@ -8,4 +8,6 @@ urlpatterns = [
     path('add-instrument/', add_instrument_view, name='add_instrument'),
     path('categories/', category_view, name='categories'),
     path('add-category/', add_category_view, name='add_category'),  # Add Categories view
+    path('categories/edit/<int:category_id>/', edit_category_view, name='edit_category'),  # New edit URL
+    path('categories/delete/<int:category_id>/', delete_category_view, name='delete_category')  # New edit URL
 ]

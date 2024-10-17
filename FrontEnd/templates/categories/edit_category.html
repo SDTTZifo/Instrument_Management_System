@@ -1,0 +1,29 @@
+
+{% extends "base.html" %} 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Edit Category{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Edit Category</h1>
+    <form method="POST" action="{% url 'edit_category' category.id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="category_name">Category Name</label>
+            <input type="text" class="form-control" id="category_name" name="category_name" value="{{ category.category_name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="category_description">Category Description</label>
+            <textarea class="form-control" id="category_description" name="category_description" rows="3" required>{{ category.category_description }}</textarea>
+        </div>
+        <button class="btn btn-success" type="submit">Save Changes</button>
+    </form>
+</div>
+{% endblock %}

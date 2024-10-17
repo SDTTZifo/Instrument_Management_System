@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render
 from .models import Instrument, Category
+from django.shortcuts import redirect, render, get_object_or_404
 
 def HomePage(request):
     return render(request, 'index.html')
@@ -50,3 +51,23 @@ def add_category_view(request):
         return redirect('categories')  # Redirect to categories view after saving
 
     return render(request, 'categories/add_category.html')
+
+def edit_category_view(request, category_id):
+    category = get_object_or_404(Category, id=category_id)  # Fetch the category or return 404 if not found
+
+    if request.method == 'POST':
+        category.category_name = request.POST.get('category_name')
+        category.category_description = request.POST.get('category_description')
+        category.save()  # Save the updated category to the database
+
+        return redirect('categories')  # Redirect to categories view after saving
+
+    return render(request, 'categories/edit_category.html', {'category': category})
+
+def delete_category_view(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        category.delete()  # Delete the category
+        return redirect('categories')  # Redirect to categories view after deletion
+
+    return render(request, 'categories/delete_category.html', {'category': category})
