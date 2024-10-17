@@ -1,30 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Instrument</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> <!-- Optional Bootstrap -->
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %} Add Instrument {% endblock title %}
+{% block content %}
     <div class="container mt-5">
-        <h1>Add New Instrument</h1>
+        <h1>Add Instrument</h1>
         <form method="POST" action="{% url 'add_instrument' %}"> <!-- Adjust action URL as necessary -->
             {% csrf_token %}
             <div class="form-group">
                 <label for="instrument_name">Instrument Name</label>
-                <input type="text" class="form-control" id="instrument_name" name="instrument_name" required>
+                <input type="text" class="form-control" id="instrument_name" name="instrument_name"required>
+            </div>  
+            <div class="form-group">
+                <label for="instrument_category">Instrument Category</label>                
+                <select class="form-control" id="instrument_category" name="instrument_category">
+                    <option value="">Select a Category</option>                  
+                    {% for category in categories %}                     
+                        <option value="{{ category.category_name }}">{{ category.category_name }}</option>                
+                    {% endfor %}
+                </select>
             </div>
             <div class="form-group">
-                <label for="instrument_description">Instrument Description</label>
-                <textarea class="form-control" id="instrument_description" name="instrument_description" rows="3" required></textarea>
+                <label for="model_number">Model Number</label>
+                <input type="text" class="form-control" id="model_number" name="model_number" required>
             </div>
             <div class="form-group">
-                <label for="owned_by">Owned By</label>
+                <label for="manufacturer">Manufacturer Name</label>
+                <input type="text" class="form-control" id="manufacturer" name="manufacturer" required>
+            </div>
+            <div class="form-group">
+                <label for="purchased_On">Purchase Date</label>
+                <input type="date" class="form-control" id="purchased_On" name="purchased_On" required>
+            </div>
+            <div class="form-group">
+                <label for="owned_by">Owned by</label>
                 <input type="text" class="form-control" id="owned_by" name="owned_by" required>
             </div>
-            <button type="submit" class="btn btn-primary">Add Instrument</button>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" class="form-control" id="location" name="location" required>
+            </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <input type="text" class="form-control" id="status" name="status" required>
+            </div>
+            <div class="form-group">
+                <label for="maintenance_date">Maintenance Date</label>
+                <input type="date" class="form-control" id="maintenance_date" name="maintenance_date" required>
+            </div>
+           
+            <button class="btn btn-success" type="submit" value="Save">Add Instrument</button>
         </form>
     </div>
-</body>
-</html>
+    {% endblock content %}

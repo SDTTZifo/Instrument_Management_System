@@ -10,23 +10,35 @@
     <div class="container text-center mt-5">
         <h1>Instruments Management</h1>
         <div class="mt-4">
-            <a href="{% url 'add_instrument' %}" class="btn btn-primary btn-lg">Add Instrument</a>
+            <a href="{% url 'add_instrument' %}" class="btn btn-success">Add Instrument</a>
         </div>
 
         <table class="table table-striped mt-4">
             <thead>
                 <tr>
                     <th>Instrument Name</th>
-                    <th>Instrument Description</th>
+                    <th>Instrument Category</th>
+                    <th>Model Number</th>
+                    <th>Manufacturer</th>
+                    <th>Purchase Date</th>
                     <th>Owned By</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Maintenance Date</th>                    
                 </tr>
             </thead>
             <tbody>
                 {% for instrument in instruments %}
                 <tr>
                     <td>{{ instrument.instrument_name }}</td>
-                    <td>{{ instrument.instrument_description }}</td>
+                    <td>{{ instrument.category  }}</td>
+                    <td>{{ instrument.model_number  }}</td>
+                    <td>{{ instrument.manufacturer  }}</td>
+                    <td>{{ instrument.purchased_On  }}</td>
                     <td>{{ instrument.owned_by }}</td>
+                    <td>{{ instrument.location }}</td>
+                    <td>{{ instrument.status }}</td>
+                    <td>{{ instrument.maintenance_date  }}</td>
                 </tr>
                 {% empty %}
                 <tr>

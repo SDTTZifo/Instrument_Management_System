@@ -1,0 +1,35 @@
+{% extends "base.html" %} 
+
+
+<title>{% block title %}Add Category{% endblock %}</title>    
+{% block content %}
+    <div class="container text-center mt-5">
+        <h1>Categories</h1>
+        <div class="mt-4">
+            <a href="{% url 'add_category' %}" class="btn btn-success">Add Category</a>
+        </div>
+      
+
+        <table class="table table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Category Description</th>                                 
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.category_name }}</td>
+                    <td>{{ category.category_description }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No categories available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% endblock %}
