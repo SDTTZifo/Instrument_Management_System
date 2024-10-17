@@ -17,18 +17,20 @@ def add_instrument_view(request):
         instrument_name = request.POST.get('instrument_name')
         instrument_description = request.POST.get('instrument_description')
         owned_by = request.POST.get('owned_by')
+        instrument_category_id = request.POST.get('instrument_category')  # Ensure this is the ID
 
         # Create a new instrument object and save it to the database
         new_instrument = Instrument(
             instrument_name=instrument_name,
-            instrument_description=instrument_description,
-            owned_by=owned_by
+            owned_by=owned_by,
+            instrument_category_id=instrument_category_id  # Use the ID here
         )
         new_instrument.save()  # Save to database
 
         return redirect('instruments')  # Redirect to instruments view after saving
 
     return render(request, 'instruments/add_instrument.html', {'categories': categories})
+
 
 def category_view(request):
     categories = Category.objects.all()  # Retrieve all instrument records

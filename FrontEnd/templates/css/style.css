@@ -1,0 +1,29 @@
+/* Ensure the sidebar doesn't cover the main content */
+body {
+    overflow-x: hidden;
+}
+
+/* Optional: Smooth transitions for sidebar */
+.sidebar {
+    transition: all 0.3s;
+}
+
+/* Highlight active links */
+.nav-link.active {
+    background-color: #495057 !important;
+    color: #fff !important;
+}
+
+/* Optional: Customize scrollbar for the sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
