@@ -1,3 +1,142 @@
+categories.html
+
+{% extends "base.html" %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Categories</h1>
+    <div class="mt-4">
+        <a href="{% url 'add_category' %}" class="btn btn-success">Add Category</a>
+    </div>
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Category Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.category_name }}</td>
+                <td>{{ category.category_description }}</td>
+                <td>
+                    <a href="{% url 'edit_category' category.id %}" class="btn btn-warning">Edit</a>
+                    <button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-id="{{ category.id }}" data-name="{{ category.category_name }}">Delete</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">No categories available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong id="categoryName"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" action="" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#deleteModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget) // Button that triggered the modal
+        var id = button.data('id') // Extract info from data-* attributes
+        var name = button.data('name') // Extract info from data-* attributes
+        var actionUrl = "{% url 'delete_category' 'id' %}".replace('id', id); // Create action URL
+
+        var modal = $(this)
+        modal.find('#categoryName').text(name) // Show category name in the modal
+        modal.find('#deleteForm').attr('action', actionUrl) // Set form action URL
+    })
+</script>
+
+{% endblock %}
+
+add_category.html
+
+{% extends "base.html" %}
+
+{% block title %}Add Category{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Add New Category</h1>
+    <form method="POST" action="{% url 'add_category' %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="category_name">Category Name</label>
+            <input type="text" class="form-control" id="category_name" name="category_name" required>
+        </div>
+        <div class="form-group">
+            <label for="category_description">Category Description</label>
+            <textarea class="form-control" id="category_description" name="category_description" rows="3" required></textarea>
+        </div>
+        <button class="btn btn-success" type="submit">Add Category</button>
+    </form>
+</div>
+{% endblock %}
+
+
+edit_category.html
+
+{% extends "base.html" %}
+
+{% block title %}Edit Category{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Edit Category</h1>
+    <form method="POST" action="{% url 'edit_category' category.id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="category_name">Category Name</label>
+            <input type="text" class="form-control" id="category_name" name="category_name" value="{{ category.category_name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="category_description">Category Description</label>
+            <textarea class="form-control" id="category_description" name="category_description" rows="3" required>{{ category.category_description }}</textarea>
+        </div>
+        <button class="btn btn-success" type="submit">Save Changes</button>
+    </form>
+</div>
+{% endblock %}
+
+
+base.html
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+
+
+
 Views.py
 
 from django.shortcuts import redirect, render, get_object_or_404
