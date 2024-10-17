@@ -1,4 +1,5 @@
 from django.shortcuts import redirect, render
+from django.contrib import messages
 from .models import Instrument, Category
 
 def HomePage(request):
@@ -8,8 +9,9 @@ def index(request):
     return render(request, 'index.html')
 
 def instruments_view(request):
+    messages.success(request, "Welcome to the instrument page!")
     instruments = Instrument.objects.all()  # Retrieve all instrument records
-    return render(request, 'instruments/instruments.html', {'instruments': instruments})
+    return render(request, 'instruments/instruments.html', {'instruments': instruments,'modal_title': 'modal_title'})
 
 def add_instrument_view(request):
     categories = Category.objects.all()
