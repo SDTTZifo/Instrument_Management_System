@@ -113,6 +113,17 @@ Navigate to below URL.
        ```text
        Password@123
        ```
+   ##### 5.3 Django Data Migration
+
+   Migration is an importatnt step to do when playing with Django. To engage migration run the below command to execute database activity.
+   - On Windows:
+   ```bash
+     py .\manage.py makemigrations
+   ```
+   - On macOS/Linux:
+   ```bash
+     python3 manage.py makemigrations
+   ```
    
   Navigate to below URL to access the admin panel.
   
