@@ -9,7 +9,7 @@ class Category(models.Model):
 
 class Instrument(models.Model):    
     instrument_name = models.CharField(max_length=100)
-    instrument_category = models.CharField(max_length=100, null=True)
+    category = models.CharField(max_length=100, null=True)
     model_number = models.CharField(max_length=100, null=True)
     manufacturer = models.CharField(max_length=100, null=True)
     purchased_On =models.DateField(null=True)
