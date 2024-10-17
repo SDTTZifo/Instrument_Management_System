@@ -1,0 +1,113 @@
+Views.py
+
+from django.shortcuts import redirect, render, get_object_or_404
+from .models import Instrument  # Assuming you're using the same model for categories
+from .models import Category  # Ensure you have a Category model defined
+
+# Existing views...
+
+def edit_category_view(request, category_id):
+    category = get_object_or_404(Category, id=category_id)  # Fetch the category or return 404 if not found
+
+    if request.method == 'POST':
+        category.category_name = request.POST.get('category_name')
+        category.category_description = request.POST.get('category_description')
+        category.save()  # Save the updated category to the database
+
+        return redirect('categories')  # Redirect to categories view after saving
+
+    return render(request, 'categories/edit_category.html', {'category': category})
+
+def delete_category_view(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        category.delete()  # Delete the category
+        return redirect('categories')  # Redirect to categories view after deletion
+
+    return render(request, 'categories/delete_category.html', {'category': category})
+
+
+urls.py
+from django.urls import path
+from .views import categories_view, add_category_view, edit_category_view, delete_category_view
+
+urlpatterns = [
+    path('categories/', categories_view, name='categories'),  # Existing view
+    path('categories/add/', add_category_view, name='add_category'),  # Existing view
+    path('categories/edit/<int:category_id>/', edit_category_view, name='edit_category'),  # New edit URL
+    path('categories/delete/<int:category_id>/', delete_category_view, name='delete_category'),  # New delete URL
+]
+
+
+Categoreis.html
+
+<tbody>
+    {% for category in categories %}
+    <tr>
+        <td>{{ category.category_name }}</td>
+        <td>{{ category.category_description }}</td>
+        <td>
+            <a href="{% url 'edit_category' category.id %}" class="btn btn-warning">Edit</a>  <!-- Edit button -->
+            <a href="{% url 'delete_category' category.id %}" class="btn btn-danger">Delete</a>  <!-- Delete button -->
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="3">No categories available.</td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+
+edit_category.html
+
+{% extends "base.html" %} 
+
+<title>{% block title %}Edit Category{% endblock %}</title>    
+{% block content %}
+<div class="container text-center mt-5">
+    <h1>Edit Category</h1>
+    <form method="POST" action="{% url 'edit_category' category.id %}">  <!-- Adjust action URL -->
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="category_name">Category Name</label>
+            <input type="text" class="form-control" id="category_name" name="category_name" value="{{ category.category_name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="category_description">Category Description</label>
+            <textarea class="form-control" id="category_description" name="category_description" rows="3" required>{{ category.category_description }}</textarea>
+        </div>
+        <button class="btn btn-success" type="submit">Save Changes</button>
+    </form>
+</div>
+{% endblock %}
+
+
+delete_caetegory.html
+
+{% extends "base.html" %} 
+
+<title>{% block title %}Delete Category{% endblock %}</title>    
+{% block content %}
+<div class="container text-center mt-5">
+    <h1>Delete Category</h1>
+    <p>Are you sure you want to delete the category "{{ category.category_name }}"?</p>
+    <form method="POST" action="{% url 'delete_category' category.id %}">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Delete</button>
+        <a href="{% url 'categories' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+
+modesl.py
+
+class Category(models.Model):
+    category_name = models.CharField(max_length=100)
+    category_description = models.TextField()
+
+    def __str__(self):
+        return self.category_name
+
+python manage.py makemigrations
+python manage.py migrate
