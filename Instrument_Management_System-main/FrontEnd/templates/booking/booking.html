@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+
+<title>{% block title %}New Category{% endblock %}</title>
+{% block content %}
+<div class="container text-center mt-5">
+    <h1>Bookings</h1>
+    <div class="mt-4">
+        <a href="{% url 'new_booking' %}" class="btn btn-success">New Booking</a>
+    </div>
+
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Booking</th>
+                <th>Booking Description</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+{% endblock %}

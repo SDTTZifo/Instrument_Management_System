@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}
+Instruments Management
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Instruments</h1>
+    <div class="text-center mt-4">
+        <a href="{% url 'add_instrument' %}" class="btn btn-success">Add Instrument</a>
+    </div>
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Instrument Name</th>
+                <th>Instrument Category</th>
+                <th>Model Number</th>
+                <th>Manufacturer</th>
+                <th>Purchase Date</th>
+                <th>Owned By</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Maintenance Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if instruments %}
+            {% for instrument in instruments %}
+            <tr>
+                <td>{{ instrument.instrument_name }}</td>
+                <td>{{ instrument.instrument_category.category_name }}</td>
+                <td>{{ instrument.model_number }}</td>
+                <td>{{ instrument.manufacturer }}</td>
+                <td>{{ instrument.purchased_On }}</td>
+                <td>{{ instrument.owned_by }}</td>
+                <td>{{ instrument.location }}</td>
+                <td>{{ instrument.status }}</td>
+                <td>{{ instrument.maintenance_date }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="9">No instruments available.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

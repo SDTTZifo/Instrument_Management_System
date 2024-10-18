@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Instruments Management{% endblock title %}
+
+{% block stylesheets %}
+    <!-- Add any additional styles here -->
+    <!-- For example, if you have page-specific CSS -->
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Add Instrument</h1>
+    <form method="POST" action="{% url 'add_instrument' %}">
+        {% csrf_token %}
+        
+        <!-- Instrument Name -->
+        <div class="mb-3">
+            <label for="instrument_name" class="form-label">Instrument Name</label>
+            <input type="text" class="form-control" id="instrument_name" name="instrument_name" required>
+        </div>
+        
+        <!-- Instrument Category -->
+        <div class="mb-3">
+            <label for="instrument_category" class="form-label">Instrument Category</label>
+            <!-- <select class="form-select" id="instrument_category" name="instrument_category" required>
+                <option value="" disabled selected>Select a Category</option>
+                {% for category in categories %}
+                <option value="{{ category.category_name }}">{{ category.category_name }}</option>
+                {% endfor %}
+            </select> -->
+            <select class="form-select" name="instrument_category" required>
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.category_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Model Number -->
+        <div class="mb-3">
+            <label for="model_number" class="form-label">Model Number</label>
+            <input type="text" class="form-control" id="model_number" name="model_number" required>
+        </div>
+        
+        <!-- Manufacturer Name -->
+        <div class="mb-3">
+            <label for="manufacturer" class="form-label">Manufacturer Name</label>
+            <input type="text" class="form-control" id="manufacturer" name="manufacturer" required>
+        </div>
+        
+        <!-- Purchase Date -->
+        <div class="mb-3">
+            <label for="purchased_On" class="form-label">Purchase Date</label>
+            <input type="date" class="form-control" id="purchased_On" name="purchased_On" required>
+        </div>
+        
+        <!-- Owned By -->
+        <div class="mb-3">
+            <label for="owned_by" class="form-label">Owned by</label>
+            <input type="text" class="form-control" id="owned_by" name="owned_by" required>
+        </div>
+        
+        <!-- Location -->
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input type="text" class="form-control" id="location" name="location" required>
+        </div>
+        
+        <!-- Status -->
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <input type="text" class="form-control" id="status" name="status" required>
+        </div>
+        
+        <!-- Maintenance Date -->
+        <div class="mb-3">
+            <label for="maintenance_date" class="form-label">Maintenance Date</label>
+            <input type="date" class="form-control" id="maintenance_date" name="maintenance_date" required>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="btn btn-success" type="submit">Add Instrument</button>
+    </form>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+    <!-- Add any additional scripts here -->
+{% endblock javascripts %}
