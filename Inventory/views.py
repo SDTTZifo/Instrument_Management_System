@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render
 from .models import Instrument, Category
+from django.db.models import Q
 
 def HomePage(request):
     return render(request, 'index.html')
@@ -50,3 +51,18 @@ def add_category_view(request):
         return redirect('categories')  # Redirect to categories view after saving
 
     return render(request, 'categories/add_category.html')
+
+def search_instrument_view(request):      
+
+    query = request.GET.get("query")
+    instruments = Instrument.objects.all()
+    if query:
+        instruments = instruments.filter(
+                                            Q(name__icontains=query)|
+                                            Q(category__icontains=query)|
+                                            Q(serial_number__icontains=query)|
+                                            Q(status__icontains=query))
+        
+                                        
+
+    return render(request, 'instruments/add_instrument.html', {'instruments': instruments, 'query' : query})

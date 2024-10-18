@@ -1,11 +1,11 @@
-{% extends "base.html" %} 
+{% extends 'base.html' %} 
 
 
 <title>{% block title %}Add Category{% endblock %}</title>    
 {% block content %}
 <div class="container text-center mt-5">
-        <h1>Add New Cateory</h1>
-        <form method="POST" action="{% url 'add_category' %}"> <!-- Adjust action URL as necessary -->
+        <h1>Add Cateory</h1>
+        <form method="POST" action="{% url 'add_category' %}"> 
             {% csrf_token %}
             <div class="form-group">
                 <label for="category_name">Category Name</label>

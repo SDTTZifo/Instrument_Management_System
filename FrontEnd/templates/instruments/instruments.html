@@ -1,56 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instruments Management</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container text-center mt-5">
-        <h1>Instruments Management</h1>
-        <div class="mt-4">
-            <a href="{% url 'add_instrument' %}" class="btn btn-success">Add Instrument</a>
+{% extends 'base.html' %} 
+
+
+<title>{% block title %}Add Category{% endblock %}</title>    
+{% block content %}
+
+<div class="container my-4">
+    <div class="card shadow-sm rounded p-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="display-6 mb-0 text-success">Instruments Management</h4>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end gap-2">
+                <a class="btn btn-success btn-sm rounded-pill shadow-sm" href="{% url 'add_instrument' %}">
+                    <i class="fa-solid fa-plus"></i> Add Instrument
+                </a>
+            </div>            
         </div>
-
-        <table class="table table-striped mt-4">
-            <thead>
-                <tr>
-                    <th>Instrument Name</th>
-                    <th>Instrument Category</th>
-                    <th>Model Number</th>
-                    <th>Manufacturer</th>
-                    <th>Purchase Date</th>
-                    <th>Owned By</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Maintenance Date</th>                    
-                </tr>
-            </thead>
-            <tbody>
-                {% for instrument in instruments %}
-                <tr>
-                    <td>{{ instrument.instrument_name }}</td>
-                    <td>{{ instrument.category  }}</td>
-                    <td>{{ instrument.model_number  }}</td>
-                    <td>{{ instrument.manufacturer  }}</td>
-                    <td>{{ instrument.purchased_On  }}</td>
-                    <td>{{ instrument.owned_by }}</td>
-                    <td>{{ instrument.location }}</td>
-                    <td>{{ instrument.status }}</td>
-                    <td>{{ instrument.maintenance_date  }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3">No instruments available.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <form class="input-group mt-4" role="search" id="searchform" action="{% url 'instrument_search_list' %}" method="get" accept-charset="utf-8">
+            <input id="searchbox" name="query" type="text" class="form-control border-0 rounded-pill shadow-sm" placeholder="Search Instruments..."
+            value ="{{ query }}">
+            <button class="btn btn-outline-success rounded-pill shadow-sm" type="submit">
+                <i class="fa-solid fa-search"></i>
+            </button>
+        </form>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+<div class="container">
+    <style>
+      .table th, .table td {
+          text-align: center;
+      }
+    </style>
+    <table class="table table-sm table-striped table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">Instrument Name <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Instrument Category <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Model Number <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Manufacturer <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Purchase Date <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Owned By <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Location <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Status <i class="fa-solid fa-sort"></i></th>
+                <th scope="col">Maintenance Date</th>                     
+            </tr>
+        </thead>
+        <tbody>
+            {% for instrument in instruments %}
+            <tr>               
+                <td>{{ instrument.instrument_name }}</td>
+                <td>{{ instrument.category  }}</td>
+                <td>{{ instrument.model_number  }}</td>
+                <td>{{ instrument.manufacturer  }}</td>
+                <td>{{ instrument.purchased_On  }}</td>
+                <td>{{ instrument.owned_by }}</td>
+                <td>{{ instrument.location }}</td>
+                <td>{{ instrument.status }}</td>
+                <td>{{ instrument.maintenance_date  }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No instruments available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>    
+</div>
+{% endblock %}
