@@ -1,12 +1,12 @@
 
 from django.contrib import admin
 from django.urls import include, path
-
-from Inventory.views import HomePage
+from django.contrib.auth import views as auth_views
+from django.shortcuts import redirect
 
 urlpatterns = [
-    path('', HomePage, name='home'),
     path('admin/', admin.site.urls),
-    path('inventory/', include('Inventory.urls')),
+    path('Inventory/', include('Inventory.urls')),   
     path('Booking/', include('Booking.urls')),
+    path('logout/',auth_views.LogoutView.as_view(),name='logout'),
 ]

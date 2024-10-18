@@ -1,16 +1,26 @@
 from django.shortcuts import redirect, render
 from .models import Instrument, Category
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 
+
+@login_required
 def HomePage(request):
     return render(request, 'index.html')
 
+
+@login_required
 def index(request):
     return render(request, 'index.html')
 
+
+@login_required
 def instruments_view(request):
     instruments = Instrument.objects.all()  # Retrieve all instrument records
     return render(request, 'instruments/instruments.html', {'instruments': instruments})
 
+
+@login_required
 def add_instrument_view(request):
     categories = Category.objects.all()
     if request.method == 'POST':
@@ -30,11 +40,14 @@ def add_instrument_view(request):
 
     return render(request, 'instruments/add_instrument.html', {'categories': categories})
 
+
+@login_required
 def category_view(request):
     categories = Category.objects.all()  # Retrieve all instrument records
     return render(request, 'categories/categories.html', {'categories': categories})
 
 
+@login_required
 def add_category_view(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name')
