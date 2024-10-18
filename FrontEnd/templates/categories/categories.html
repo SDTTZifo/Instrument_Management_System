@@ -3,9 +3,9 @@
 
 <title>{% block title %}Add Category{% endblock %}</title>    
 {% block content %}
-<div class="container">
+<div class="container" style="float: right;">
     <!-- Header Section -->
-    <div class="container my-3">
+    <div class="container my-4">
         <div class="card shadow-sm rounded p-3">
             <div class="row align-items-center">
                 <div class="col-md-6">
@@ -32,7 +32,7 @@
             <tbody>
                 {% for category in categories %}
                 <tr>
-                    <th scope="row">{{ category.category_name }}</th>
+                    <td>{{ category.category_description }}</td>      
                     <td>{{ category.category_description }}</td>                   
                     <!-- Edit and delete button will come here -->
                 </tr>
