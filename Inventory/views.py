@@ -1,4 +1,5 @@
 from django.shortcuts import redirect, render
+from django.http import JsonResponse
 from .models import Instrument, Category
 from django.shortcuts import redirect, render, get_object_or_404
 
@@ -64,10 +65,23 @@ def edit_category_view(request, category_id):
 
     return render(request, 'categories/edit_category.html', {'category': category})
 
+# def delete_category_view(request, category_id):
+#     category = get_object_or_404(Category, id=category_id)
+#     if request.method == 'POST':
+#         category.delete()  # Delete the category
+#         return redirect('categories')  # Redirect to categories view after deletion
+
+#     return render(request, 'categories/delete_category.html', {'category': category})
+
 def delete_category_view(request, category_id):
     category = get_object_or_404(Category, id=category_id)
+
     if request.method == 'POST':
         category.delete()  # Delete the category
-        return redirect('categories')  # Redirect to categories view after deletion
 
-    return render(request, 'categories/delete_category.html', {'category': category})
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Check if it's an AJAX request
+            return JsonResponse({'message': 'Category deleted successfully'})
+
+        return redirect('categories')  # Redirect if not an AJAX request
+
+        return redirect('categories')
