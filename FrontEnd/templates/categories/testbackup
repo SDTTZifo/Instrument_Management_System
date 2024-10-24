@@ -113,3 +113,65 @@ def search_category_view(request):
         raise
 
 
+----------------------------------------------------------------------------------------------------------------------------------
+Category.py
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils.timezone import now
+
+class Category(models.Model):
+    category_name = models.CharField(max_length=100, unique=True)
+    category_description = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)  # Automatically set on create
+    created_by = models.ForeignKey(User, related_name='category_created_by', on_delete=models.SET_NULL, null=True)
+    modified_date = models.DateTimeField(auto_now=True)  # Automatically set on update
+    modified_by = models.ForeignKey(User, related_name='category_modified_by', on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return self.category_name
+
+    # Override save method to update modified_by on each save
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Object is being created
+            self.created_by = kwargs.pop('user', None)
+        self.modified_by = kwargs.pop('user', None)
+        super(Category, self).save(*args, **kwargs)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+category_view.py
+
+@login_required
+def add_category_view(request):
+    if not request.user.has_perm('category.add_category'):
+        raise PermissionDenied()    
+    if request.method == 'POST':
+        category_name = request.POST.get('category_name')
+        category_description = request.POST.get('category_description')
+
+        # Create a new category object
+        new_category = Category(
+            category_name=category_name,
+            category_description=category_description
+        )
+        new_category.save(user=request.user)  # Pass the current user when saving
+
+        return redirect('categories')  # Redirect to categories view after saving
+
+    return render(request, 'categories/add_category.html')
+
+@login_required
+def edit_category_view(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+
+    if request.method == 'POST':
+        category.category_name = request.POST.get('category_name')
+        category.category_description = request.POST.get('category_description')
+
+        category.save(user=request.user)  # Pass the current user when saving
+
+        return redirect('categories')
+
+    return render(request, 'categories/edit_category.html', {'category': category})
+
+
