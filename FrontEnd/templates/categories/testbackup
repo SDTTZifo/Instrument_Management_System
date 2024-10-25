@@ -1,3 +1,57 @@
+Categories.py
+from yourapp.models import Category
+
+# Categories
+categories = [
+    {'name': 'Spectroscopy', 'description': 'Instruments used for spectroscopic analysis.'},
+    {'name': 'Chromatography', 'description': 'Instruments used for chromatographic separation.'},
+    {'name': 'Thermal Analysis', 'description': 'Instruments used for analyzing thermal properties.'},
+    {'name': 'Dissolution Testing', 'description': 'Instruments for testing dissolution rates.'},
+    {'name': 'Particle Analysis', 'description': 'Instruments for particle size and distribution analysis.'},
+    {'name': 'Clean Room Monitoring', 'description': 'Instruments to monitor clean room environments.'},
+    {'name': 'Stability Testing', 'description': 'Instruments for stability and environmental testing.'},
+    {'name': 'Processing Equipment', 'description': 'Equipment for processing lab samples and products.'},
+    {'name': 'Packaging Equipment', 'description': 'Equipment for packaging and labeling.'},
+    {'name': 'Sterilization Equipment', 'description': 'Instruments for sterilization and decontamination.'},
+    {'name': 'Cleaning Validation', 'description': 'Instruments used for cleaning validation in labs.'},
+    {'name': 'Physical Testing', 'description': 'Instruments for physical property analysis.'},
+    {'name': 'Microscope', 'description': 'Various types of microscopes for microbiological testing.'},
+    {'name': 'Basic Equipment', 'description': 'Basic laboratory equipment for general use.'},
+    {'name': 'Advanced Preparation', 'description': 'Advanced equipment for sample preparation.'}
+]
+
+# Save each category to the database
+for cat in categories:
+    category = Category(category_name=cat['name'], category_description=cat['description'])
+    category.save()
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+location.py
+
+from yourapp.models import Location
+
+# Locations
+locations = [
+    {'name': 'Zenith 2nd floor', 'description': 'Location on the second floor of Zenith building.'},
+    {'name': 'Zillion 1st floor', 'description': 'Location on the first floor of Zillion building.'},
+    {'name': 'Zillion 4th floor', 'description': 'Location on the fourth floor of Zillion building.'},
+    {'name': 'Zillion 5th floor', 'description': 'Location on the fifth floor of Zillion building.'},
+    {'name': 'Zillion 6th floor', 'description': 'Location on the sixth floor of Zillion building.'},
+    {'name': 'Zitopia 5th floor', 'description': 'Location on the fifth floor of Zitopia building.'}
+]
+
+# Save each location to the database
+for loc in locations:
+    location = Location(location_name=loc['name'], location_description=loc['description'])
+    location.save()
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 # Import the Instrument model
 from yourapp.models import Instrument
 
