@@ -1,177 +1,537 @@
-Category.py
-from django.db import models
+# Import the Instrument model
+from yourapp.models import Instrument
 
-class Category(models.Model):
-    category_name = models.CharField(max_length=100, unique=True)
-    category_description = models.TextField() 
+# 1. UV-Visible Spectrophotometer
+uv_vis = Instrument(
+    instrument_name='UV-Visible Spectrophotometer',
+    instrument_category='Spectroscopy',
+    model_number='UV-1234',
+    manufacturer='SpectroTech',
+    purchased_On='2020-01-15',
+    owned_by='Lab B',
+    location='Room 101',
+    status='Active',
+    maintenance_date='2024-09-20'
+)
+uv_vis.save()
 
-    def __str__(self):
-        return self.category_name
+# 2. FTIR (Fourier Transform Infrared) Spectrophotometer
+ftir = Instrument(
+    instrument_name='FTIR (Fourier Transform Infrared) Spectrophotometer',
+    instrument_category='Spectroscopy',
+    model_number='FTIR-5678',
+    manufacturer='InfraTech',
+    purchased_On='2019-06-10',
+    owned_by='Lab C',
+    location='Room 202',
+    status='Active',
+    maintenance_date='2024-10-05'
+)
+ftir.save()
 
-category_view.py
+# 3. NIR (Near-Infrared) Analyzer
+nir_analyzer = Instrument(
+    instrument_name='NIR (Near-Infrared) Analyzer',
+    instrument_category='Spectroscopy',
+    model_number='NIR-4321',
+    manufacturer='TechLabs',
+    purchased_On='2021-03-05',
+    owned_by='Lab A',
+    location='Room 303',
+    status='Active',
+    maintenance_date='2024-11-15'
+)
+nir_analyzer.save()
 
-from django.shortcuts import redirect, render, get_object_or_404
-from django.contrib import messages
-from Inventory.models import Category, Instrument, Location
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-from django.db.models import Q
-from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
+# 4. Atomic Absorption Spectrophotometer
+aa_spectrophotometer = Instrument(
+    instrument_name='Atomic Absorption Spectrophotometer',
+    instrument_category='Spectroscopy',
+    model_number='AA-9876',
+    manufacturer='AbsorbTech',
+    purchased_On='2018-11-25',
+    owned_by='Lab D',
+    location='Room 404',
+    status='Under Maintenance',
+    maintenance_date='2024-12-01'
+)
+aa_spectrophotometer.save()
 
-@login_required
-def category_view(request):
-    try:
-        if not request.user.has_perm('category.view_category'):
-            raise PermissionDenied()
-        query = request.GET.get('query', '')  # Get the query parameter, default to an empty string
-        if query:
-            # Filter categories based on the search query for both name and description
-            categories = Category.objects.filter(
-                Q(category_name__icontains=query) | Q(category_description__icontains=query)
-            )
-        else:
-            # If no search query, retrieve all categories
-            categories = Category.objects.all()
+# 5. Fluorescence Spectrophotometer
+fluorescence_spec = Instrument(
+    instrument_name='Fluorescence Spectrophotometer',
+    instrument_category='Spectroscopy',
+    model_number='FL-6543',
+    manufacturer='FluoTech',
+    purchased_On='2022-08-18',
+    owned_by='Lab E',
+    location='Room 505',
+    status='Active',
+    maintenance_date='2025-01-15'
+)
+fluorescence_spec.save()
 
-        return render(request, 'categories/categories.html', {
-            'categories': categories,
-            'query': query  # Pass the query back to the template to keep the search field populated
-        })
-    except Exception as e:
-        raise
+# Import the Instrument model
+from yourapp.models import Instrument
 
-@login_required
-def add_category_view(request):
-    try:
-        if not request.user.has_perm('category.add_category'):
-            raise PermissionDenied()    
-        if request.method == 'POST':
-            category_name = request.POST.get('category_name')
-            category_description = request.POST.get('category_description')       
+# 1. HPLC (High-Performance Liquid Chromatography)
+hplc = Instrument(
+    instrument_name='HPLC (High-Performance Liquid Chromatography)',
+    instrument_category='Chromatography',
+    model_number='HPLC-9001',
+    manufacturer='ChromTech',
+    purchased_On='2021-04-10',
+    owned_by='Lab F',
+    location='Room 601',
+    status='Active',
+    maintenance_date='2025-02-20'
+)
+hplc.save()
 
-            # Create a new category object and save it to the database
-            new_category = Category(
-                category_name=category_name,
-                category_description=category_description
-            )
-            new_category.save()  # Save to database
+# 2. GC (Gas Chromatography)
+gc = Instrument(
+    instrument_name='GC (Gas Chromatography)',
+    instrument_category='Chromatography',
+    model_number='GC-5670',
+    manufacturer='Chromex',
+    purchased_On='2019-11-15',
+    owned_by='Lab G',
+    location='Room 602',
+    status='Active',
+    maintenance_date='2024-12-10'
+)
+gc.save()
 
-            return redirect('categories')  # Redirect to categories view after saving
+# 3. TLC (Thin Layer Chromatography) Scanner
+tlc_scanner = Instrument(
+    instrument_name='TLC (Thin Layer Chromatography) Scanner',
+    instrument_category='Chromatography',
+    model_number='TLC-1221',
+    manufacturer='ScanTech',
+    purchased_On='2020-07-30',
+    owned_by='Lab H',
+    location='Room 603',
+    status='Active',
+    maintenance_date='2025-03-25'
+)
+tlc_scanner.save()
 
-        return render(request, 'categories/add_category.html')
-    except Exception as e:
-        raise
+# 1. Differential Scanning Calorimeter (DSC)
+dsc = Instrument(
+    instrument_name='Differential Scanning Calorimeter (DSC)',
+    instrument_category='Thermal Analysis',
+    model_number='DSC-3456',
+    manufacturer='ThermoTech',
+    purchased_On='2018-02-25',
+    owned_by='Lab I',
+    location='Room 701',
+    status='Active',
+    maintenance_date='2024-11-10'
+)
+dsc.save()
 
+# 2. Thermogravimetric Analyzer (TGA)
+tga = Instrument(
+    instrument_name='Thermogravimetric Analyzer (TGA)',
+    instrument_category='Thermal Analysis',
+    model_number='TGA-7890',
+    manufacturer='ThermoLabs',
+    purchased_On='2020-06-12',
+    owned_by='Lab J',
+    location='Room 702',
+    status='Active',
+    maintenance_date='2024-12-05'
+)
+tga.save()
 
-def edit_category_view(request, category_id):
-    try:
-        category = get_object_or_404(Category, id=category_id)  # Fetch the category or return 404 if not found
+# 3. Melting Point Apparatus
+melting_point = Instrument(
+    instrument_name='Melting Point Apparatus',
+    instrument_category='Thermal Analysis',
+    model_number='MP-1122',
+    manufacturer='CalorTech',
+    purchased_On='2019-09-08',
+    owned_by='Lab K',
+    location='Room 703',
+    status='Active',
+    maintenance_date='2025-01-20'
+)
+melting_point.save()
 
-        if request.method == 'POST':
-            category.category_name = request.POST.get('category_name')
-            category.category_description = request.POST.get('category_description')
-            category.save()  # Save the updated category to the database
+# 1. Particle Counter
+particle_counter = Instrument(
+    instrument_name='Particle Counter',
+    instrument_category='Clean Room Monitoring',
+    model_number='PC-6543',
+    manufacturer='CleanTech',
+    purchased_On='2021-05-18',
+    owned_by='Lab L',
+    location='Room 801',
+    status='Active',
+    maintenance_date='2024-10-30'
+)
+particle_counter.save()
 
-            return redirect('categories')  # Redirect to categories view after saving
+# 2. Air Sampler
+air_sampler = Instrument(
+    instrument_name='Air Sampler',
+    instrument_category='Clean Room Monitoring',
+    model_number='AS-9987',
+    manufacturer='AirClean',
+    purchased_On='2020-03-25',
+    owned_by='Lab M',
+    location='Room 802',
+    status='Active',
+    maintenance_date='2024-11-15'
+)
+air_sampler.save()
 
-        return render(request, 'categories/edit_category.html', {'category': category})
-    except Exception as e:
-        raise
+# 3. Temperature and Humidity Monitor
+temp_humidity_monitor = Instrument(
+    instrument_name='Temperature and Humidity Monitor',
+    instrument_category='Clean Room Monitoring',
+    model_number='TH-2234',
+    manufacturer='EnviroTech',
+    purchased_On='2019-10-05',
+    owned_by='Lab N',
+    location='Room 803',
+    status='Active',
+    maintenance_date='2025-02-01'
+)
+temp_humidity_monitor.save()
 
+# 1. Homogenizer
+homogenizer = Instrument(
+    instrument_name='Homogenizer',
+    instrument_category='Processing Equipment',
+    model_number='HMG-3457',
+    manufacturer='ProcTech',
+    purchased_On='2018-12-20',
+    owned_by='Lab O',
+    location='Room 901',
+    status='Active',
+    maintenance_date='2024-11-25'
+)
+homogenizer.save()
 
-def delete_category_view(request, category_id):
-    try:
-        category = get_object_or_404(Category, id=category_id)
+# 2. Mixer
+mixer = Instrument(
+    instrument_name='Mixer',
+    instrument_category='Processing Equipment',
+    model_number='MIX-5560',
+    manufacturer='MixLabs',
+    purchased_On='2020-02-15',
+    owned_by='Lab P',
+    location='Room 902',
+    status='Active',
+    maintenance_date='2025-01-10'
+)
+mixer.save()
 
-        if request.method == 'POST':
-            category.delete()  # Delete the category
+# 3. Granulator
+granulator = Instrument(
+    instrument_name='Granulator',
+    instrument_category='Processing Equipment',
+    model_number='GR-7895',
+    manufacturer='GranTech',
+    purchased_On='2021-07-07',
+    owned_by='Lab Q',
+    location='Room 903',
+    status='Active',
+    maintenance_date='2025-03-18'
+)
+granulator.save()
 
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Check if it's an AJAX request
-                return JsonResponse({'message': 'Category deleted successfully'})
+# 4. Coating Pan
+coating_pan = Instrument(
+    instrument_name='Coating Pan',
+    instrument_category='Processing Equipment',
+    model_number='CP-4322',
+    manufacturer='ProcCoat',
+    purchased_On='2019-11-13',
+    owned_by='Lab R',
+    location='Room 904',
+    status='Active',
+    maintenance_date='2024-12-15'
+)
+coating_pan.save()
 
-            return redirect('categories')  # Redirect if not an AJAX request
-    except Exception as e:
-        raise
+from yourapp.models import Instrument
 
+# Basic Equipment
+centrifuge = Instrument(
+    instrument_name='Centrifuge',
+    instrument_category='Basic Equipment',
+    model_number='CEN-3001',
+    manufacturer='LabTech',
+    purchased_On='2019-05-21',
+    owned_by='Lab A',
+    location='Room 201',
+    status='Active',
+    maintenance_date='2025-01-15'
+)
+centrifuge.save()
 
-@login_required  
-def search_category_view(request):
-    try:
-        if not request.user.has_perm('category.view_category'):
-            raise PermissionDenied()        
-        if request.method == 'GET': # this will be GET now      
-            category_name =  request.GET.get('query') # do some research what it does       
-            try:
-                categories = Category.objects.filter(category_name__icontains=category_name) # filter returns a list so you might consider skip except part
-                return render(request, 'categories/categories.html', {'categories': categories})
-            except:
-                return render(request, 'categories/categories.html', {})
-        else:
-            return render(request, 'categories/categories.html', {})
-    except Exception as e:
-        raise
+water_purification_system = Instrument(
+    instrument_name='Water Purification System',
+    instrument_category='Basic Equipment',
+    model_number='WPS-4821',
+    manufacturer='PureLabs',
+    purchased_On='2021-08-17',
+    owned_by='Lab B',
+    location='Room 202',
+    status='Active',
+    maintenance_date='2024-12-05'
+)
+water_purification_system.save()
 
+ultrasonicator = Instrument(
+    instrument_name='Ultra-Sonicator',
+    instrument_category='Basic Equipment',
+    model_number='US-7865',
+    manufacturer='UltraWave',
+    purchased_On='2020-03-09',
+    owned_by='Lab C',
+    location='Room 203',
+    status='Active',
+    maintenance_date='2024-11-20'
+)
+ultrasonicator.save()
 
-----------------------------------------------------------------------------------------------------------------------------------
-Category.py
+vacuum_pump = Instrument(
+    instrument_name='Vacuum Pump',
+    instrument_category='Basic Equipment',
+    model_number='VP-5123',
+    manufacturer='VacLabs',
+    purchased_On='2022-06-11',
+    owned_by='Lab D',
+    location='Room 204',
+    status='Active',
+    maintenance_date='2025-02-18'
+)
+vacuum_pump.save()
 
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils.timezone import now
+hot_plate_stirrer = Instrument(
+    instrument_name='Hot Plate Stirrer',
+    instrument_category='Basic Equipment',
+    model_number='HPS-9402',
+    manufacturer='HeatMix',
+    purchased_On='2020-09-29',
+    owned_by='Lab E',
+    location='Room 205',
+    status='Active',
+    maintenance_date='2024-10-12'
+)
+hot_plate_stirrer.save()
 
-class Category(models.Model):
-    category_name = models.CharField(max_length=100, unique=True)
-    category_description = models.TextField()
-    created_date = models.DateTimeField(auto_now_add=True)  # Automatically set on create
-    created_by = models.ForeignKey(User, related_name='category_created_by', on_delete=models.SET_NULL, null=True)
-    modified_date = models.DateTimeField(auto_now=True)  # Automatically set on update
-    modified_by = models.ForeignKey(User, related_name='category_modified_by', on_delete=models.SET_NULL, null=True)
+# Advanced Preparation
+microwave_digestion_system = Instrument(
+    instrument_name='Microwave Digestion System',
+    instrument_category='Advanced Preparation',
+    model_number='MDS-6020',
+    manufacturer='DigesterTech',
+    purchased_On='2021-02-20',
+    owned_by='Lab F',
+    location='Room 301',
+    status='Active',
+    maintenance_date='2024-12-10'
+)
+microwave_digestion_system.save()
 
-    def __str__(self):
-        return self.category_name
+sample_concentrator = Instrument(
+    instrument_name='Sample Concentrator',
+    instrument_category='Advanced Preparation',
+    model_number='SC-1548',
+    manufacturer='SampleMax',
+    purchased_On='2020-04-18',
+    owned_by='Lab G',
+    location='Room 302',
+    status='Active',
+    maintenance_date='2025-01-20'
+)
+sample_concentrator.save()
 
-    # Override save method to update modified_by on each save
-    def save(self, *args, **kwargs):
-        if not self.pk:  # Object is being created
-            self.created_by = kwargs.pop('user', None)
-        self.modified_by = kwargs.pop('user', None)
-        super(Category, self).save(*args, **kwargs)
+lyophilizer = Instrument(
+    instrument_name='Lyophilizer (Freeze Dryer)',
+    instrument_category='Advanced Preparation',
+    model_number='LYO-7512',
+    manufacturer='FreezeDry',
+    purchased_On='2019-07-22',
+    owned_by='Lab H',
+    location='Room 303',
+    status='Active',
+    maintenance_date='2024-10-01'
+)
+lyophilizer.save()
 
-----------------------------------------------------------------------------------------------------------------------------------------
-category_view.py
+mill_grinder = Instrument(
+    instrument_name='Mill/Grinder',
+    instrument_category='Advanced Preparation',
+    model_number='MG-1245',
+    manufacturer='GrindTech',
+    purchased_On='2021-10-15',
+    owned_by='Lab I',
+    location='Room 304',
+    status='Active',
+    maintenance_date='2024-11-11'
+)
+mill_grinder.save()
 
-@login_required
-def add_category_view(request):
-    if not request.user.has_perm('category.add_category'):
-        raise PermissionDenied()    
-    if request.method == 'POST':
-        category_name = request.POST.get('category_name')
-        category_description = request.POST.get('category_description')
+# Microbiological Testing
+microscope = Instrument(
+    instrument_name='Microscope',
+    instrument_category='Microbiological Testing',
+    model_number='MIC-4521',
+    manufacturer='MicroVision',
+    purchased_On='2019-12-10',
+    owned_by='Lab J',
+    location='Room 401',
+    status='Active',
+    maintenance_date='2025-03-05'
+)
+microscope.save()
 
-        # Create a new category object
-        new_category = Category(
-            category_name=category_name,
-            category_description=category_description
-        )
-        new_category.save(user=request.user)  # Pass the current user when saving
+biological_safety_cabinet = Instrument(
+    instrument_name='Biological Safety Cabinet',
+    instrument_category='Microbiological Testing',
+    model_number='BSC-5689',
+    manufacturer='SafeLabs',
+    purchased_On='2022-05-08',
+    owned_by='Lab K',
+    location='Room 402',
+    status='Active',
+    maintenance_date='2024-10-15'
+)
+biological_safety_cabinet.save()
 
-        return redirect('categories')  # Redirect to categories view after saving
+incubator = Instrument(
+    instrument_name='Incubator',
+    instrument_category='Microbiological Testing',
+    model_number='INC-3902',
+    manufacturer='ThermoLab',
+    purchased_On='2020-08-13',
+    owned_by='Lab L',
+    location='Room 403',
+    status='Active',
+    maintenance_date='2025-02-17'
+)
+incubator.save()
 
-    return render(request, 'categories/add_category.html')
+colony_counter = Instrument(
+    instrument_name='Colony Counter',
+    instrument_category='Microbiological Testing',
+    model_number='CC-7123',
+    manufacturer='ColonyTech',
+    purchased_On='2021-03-01',
+    owned_by='Lab M',
+    location='Room 404',
+    status='Active',
+    maintenance_date='2024-11-12'
+)
+colony_counter.save()
 
-@login_required
-def edit_category_view(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
+# Physical Testing
+balance = Instrument(
+    instrument_name='Balance (Analytical and Precision)',
+    instrument_category='Physical Testing',
+    model_number='BAL-6401',
+    manufacturer='AccuWeigh',
+    purchased_On='2018-11-17',
+    owned_by='Lab N',
+    location='Room 501',
+    status='Active',
+    maintenance_date='2024-10-30'
+)
+balance.save()
 
-    if request.method == 'POST':
-        category.category_name = request.POST.get('category_name')
-        category.category_description = request.POST.get('category_description')
+viscometer = Instrument(
+    instrument_name='Viscometer',
+    instrument_category='Physical Testing',
+    model_number='VISC-8732',
+    manufacturer='ViscoLabs',
+    purchased_On='2020-02-05',
+    owned_by='Lab O',
+    location='Room 502',
+    status='Active',
+    maintenance_date='2025-01-25'
+)
+viscometer.save()
 
-        category.save(user=request.user)  # Pass the current user when saving
+density_meter = Instrument(
+    instrument_name='Density Meter',
+    instrument_category='Physical Testing',
+    model_number='DEN-4950',
+    manufacturer='DensityPlus',
+    purchased_On='2021-06-24',
+    owned_by='Lab P',
+    location='Room 503',
+    status='Active',
+    maintenance_date='2024-11-25'
+)
+density_meter.save()
 
-        return redirect('categories')
+refractometer = Instrument(
+    instrument_name='Refractometer',
+    instrument_category='Physical Testing',
+    model_number='REF-1257',
+    manufacturer='RefraTech',
+    purchased_On='2019-09-15',
+    owned_by='Lab Q',
+    location='Room 504',
+    status='Active',
+    maintenance_date='2025-03-18'
+)
+refractometer.save()
 
-    return render(request, 'categories/edit_category.html', {'category': category})
+# Cleaning Validation
+toc_analyzer = Instrument(
+    instrument_name='TOC Analyzer',
+    instrument_category='Cleaning Validation',
+    model_number='TOC-9823',
+    manufacturer='CleanCheck',
+    purchased_On='2021-01-05',
+    owned_by='Lab R',
+    location='Room 601',
+    status='Active',
+    maintenance_date='2024-10-25'
+)
+toc_analyzer.save()
 
+conductivity_meter = Instrument(
+    instrument_name='Conductivity Meter',
+    instrument_category='Cleaning Validation',
+    model_number='COND-3674',
+    manufacturer='CondLabs',
+    purchased_On='2020-04-15',
+    owned_by='Lab S',
+    location='Room 602',
+    status='Active',
+    maintenance_date='2025-01-12'
+)
+conductivity_meter.save()
 
+ph_meter = Instrument(
+    instrument_name='pH Meter',
+    instrument_category='Cleaning Validation',
+    model_number='PH-7713',
+    manufacturer='PHPro',
+    purchased_On='2019-07-10',
+    owned_by='Lab T',
+    location='Room 603',
+    status='Active',
+    maintenance_date='2025-02-15'
+)
+ph_meter.save()
+
+endotoxin_tester = Instrument(
+    instrument_name='Endotoxin Tester',
+    instrument_category='Cleaning Validation',
+    model_number='ET-5902',
+    manufacturer='EndoTest',
+    purchased_On='2021-10-10',
+    owned_by='Lab U',
+    location='Room 604',
+    status='Active',
+    maintenance_date='2024-12-10'
+)
+endotoxin_tester.save()
