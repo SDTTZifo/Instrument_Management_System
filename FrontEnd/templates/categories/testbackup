@@ -778,3 +778,13 @@ urlpatterns = [
     path('inventory/', include('Inventory.urls')),
     path('Booking/', include('Booking.urls')),
 ]
+
+
+# Delete migration files except __init__.py
+Get-ChildItem -Recurse -Filter *.py -Include migrations\* | Where-Object { $_.Name -ne "__init__.py" } | Remove-Item
+
+# Delete bytecode files
+Get-ChildItem -Recurse -Filter *.pyc -Include migrations\* | Remove-Item
+
+# Delete the SQLite database
+Remove-Item db.sqlite3
