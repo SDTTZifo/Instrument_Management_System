@@ -589,3 +589,192 @@ endotoxin_tester = Instrument(
     maintenance_date='2024-12-10'
 )
 endotoxin_tester.save()
+
+
+
+
+category_views.py
+
+from django.shortcuts import redirect, render, get_object_or_404
+from django.contrib import messages
+from Inventory.models import Category, Instrument, Location
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+from django.db.models import Q
+from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
+import logging
+import linecache
+import os, sys
+
+logger = logging.getLogger('ims')
+
+def log_exception(e):
+    try:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        linecache.checkcache(filename)
+        line = linecache.getline(filename, lineno, f.f_globals)
+        logger.error('\n----------------------------------------------------------------- EXCEPTION: -----------------------------------------------------------------------\nFilePath: {}, \nLine No: {}, \nExact Location:"{}": \nError Message: {}\n--------------------------------------------------------------------------------------------------------------------------'.format(filename, lineno, line.strip(), exc_obj))
+    except Exception as e:
+        print('----------------------------------------- Logging Exception --------------------------------------------------\n {} \n -----------------------------------------------------------------------------------------------------------------'.format(str(e)))
+
+@login_required
+def category_view(request):
+    try:
+        print("request came")
+        print(Category.objects.all().values())
+        if not request.user.has_perm('category.view_category'):
+            raise PermissionDenied()
+        query = request.GET.get('query', '')  # Get the query parameter, default to an empty string
+        print(f"query: {query}")
+        if query:
+            logger.info(f"Received search query: {query}")
+            # Filter categories based on the search query for both name and description
+            categories = Category.objects.filter(
+                Q(category_name__icontains=query) | Q(category_description__icontains=query)
+            )
+        else:
+            categories = Category.objects.all()
+            print(f"Retrieved {len(categories)} records to display categories")
+            # logger.info(f"Retrieved {str(len(categories))} records to display categories")
+        
+        print(f"categories: {categories}")
+        return render(request, 'categories/categories.html', {
+            'categories': categories,
+            'query': query  # Pass the query back to the template to keep the search field populated
+        })
+    except Exception as e:
+        log_exception(e)
+
+@login_required
+def add_category_view(request):
+    try:
+        if not request.user.has_perm('category.add_category'):
+            raise PermissionDenied()    
+        if request.method == 'POST':
+            category_name = request.POST.get('category_name')
+            category_description = request.POST.get('category_description')
+            # Create a new category object
+            new_category = Category(
+                category_name=category_name,
+                category_description=category_description,
+                created_by = request.user.username
+            )
+            new_category.save()  # Pass the current user when saving
+            logger.info(f"Created new category: {str(new_category)}")
+
+            return redirect('categories')  # Redirect to categories view after saving
+
+        return render(request, 'categories/add_category.html')
+    except Exception as e:
+        log_exception(e)
+
+@login_required
+def edit_category_view(request, category_id):
+    try:
+        if not request.user.has_perm('category.edit_category'):
+            raise PermissionDenied()   
+        category = get_object_or_404(Category, id=category_id)
+
+        if request.method == 'POST':
+            category.category_name = request.POST.get('category_name')
+            category.category_description = request.POST.get('category_description')
+            category.modified_by = request.user.username
+            category.save()  # Pass the current user when saving
+            logger.info(f"Updated category: {str(category)}")
+
+            return redirect('categories')
+
+        return render(request, 'categories/edit_category.html', {'category': category})
+    except Exception as e:
+        log_exception(e)
+
+@login_required
+def delete_category_view(request, category_id):
+    try:
+        if not request.user.has_perm('category.delete_category'):
+            raise PermissionDenied()
+        category = get_object_or_404(Category, id=category_id)
+
+        if request.method == 'POST':
+            category.delete()  # Delete the category
+            logger.info(f"Deleted category: {str(category)}")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Check if it's an AJAX request
+                return JsonResponse({'message': 'Category deleted successfully'})
+
+            return redirect('categories')  # Redirect if not an AJAX request
+    except Exception as e:
+        log_exception(e)
+
+Category.py
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils.timezone import now
+
+class Category(models.Model):
+    category_no = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    category_name = models.CharField(max_length=100, unique=True)
+    category_description = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=100, null=True, blank=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    modified_by = models.CharField(max_length=100, null=True, blank=True)
+
+
+    def __str__(self):
+        return self.category_name
+
+
+Inventory.urls.py
+
+from django.urls import include, path
+from django.contrib.auth import views as auth_views
+
+from Inventory.views.category_views import *
+from Inventory.views.home_views import *
+from Inventory.views.instruments_views import *
+from Inventory.views.location_views import *
+
+urlpatterns = [
+    path('dashboard/', home_page, name='index'),
+    path('home/', home_page, name='home'),
+    path('instruments/', instruments_view, name='instruments'),  
+    path('add-instrument/', add_instrument_view, name='add_instrument'), # Add instruments view
+    path('instruments/<int:id>/', edit_instrument_view, name='edit_instrument'), # Edit instrument view
+    path('instruments/delete/<int:instrument_id>/', delete_instrument_view, name='delete_instrument'),  # Delete instrument view
+    path('categories/', category_view, name='categories'),
+    path('categories/add/', add_category_view, name='add_category'),
+    path('categories/edit/<int:category_id>/', edit_category_view, name='edit_category'),  # New edit URL
+    path('categories/delete/<int:category_id>/', delete_category_view, name='delete_category'),  # New edit URL
+    path('locations/', location_view, name='locations'),
+    path('locations/add/', add_location_view, name='add_location'),  # Add Locations
+    path('locations/edit/<int:location_id>/', edit_location_view, name='edit_location'),
+    path('locations/delete/<int:location_id>/', delete_location_view, name='delete_location'),
+]
+
+sdtt-ims urls.py
+
+
+from django.contrib import admin
+from django.urls import include, path
+from django.contrib.auth import views as auth_views
+
+from Inventory.views import *
+from Inventory.views.category_views import *
+from Inventory.views.home_views import *
+from Inventory.views.instruments_views import *
+from Inventory.views.location_views import *
+
+urlpatterns = [
+    path('', home_page, name='loginPage'),
+    path('login/', login_page, name='login'),
+    path('logout/', logout_page, name='logout'),
+    path('not-found/', not_found, name='not_found'),
+    path('admin/', admin.site.urls),
+    path('inventory/', include('Inventory.urls')),
+    path('Booking/', include('Booking.urls')),
+]
