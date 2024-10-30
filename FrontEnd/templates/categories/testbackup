@@ -788,3 +788,27 @@ Get-ChildItem -Recurse -Filter *.pyc -Include migrations\* | Remove-Item
 
 # Delete the SQLite database
 Remove-Item db.sqlite3
+
+
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+class Category(models.Model):
+    category_no = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    category_name = models.CharField(max_length=100, unique=True)
+    category_description = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=100, null=True, blank=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    modified_by = models.CharField(max_length=100, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        super(Category, self).save(*args, **kwargs)
+        if not self.category_no:
+            self.category_no = f"{self.id:04}"
+            super(Category, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.category_name
+
