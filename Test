@@ -1,1 +1,45 @@
-.
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.username.errors }}
+    {{ form.username }}
+    {{ form.password.errors }}
+    {{ form.password }}
+    
+    <button type="submit">Login</button>
+</form>
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div id="username-errors" class="alert alert-danger">
+        {{ form.username.errors }}
+    </div>
+    {{ form.username }}
+    <div id="password-errors" class="alert alert-danger">
+        {{ form.password.errors }}
+    </div>
+    {{ form.password }}
+    
+    <button type="submit">Login</button>
+</form>
+
+<script>
+    window.onload = function() {
+        // Clear non-field errors
+        const nonFieldErrors = document.querySelectorAll('.alert.alert-danger');
+        nonFieldErrors.forEach(function(error) {
+            error.remove();
+        });
+
+        // Optionally, clear specific field errors as well
+        const usernameErrors = document.getElementById('username-errors');
+        if (usernameErrors) {
+            usernameErrors.remove();
+        }
+
+        const passwordErrors = document.getElementById('password-errors');
+        if (passwordErrors) {
+            passwordErrors.remove();
+        }
+    };
+</script>
