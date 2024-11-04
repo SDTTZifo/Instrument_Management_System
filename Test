@@ -40,60 +40,66 @@
 <br><br><br>
 
 <div class="container">
-    <h2 class="mb-3">Upcoming Bookings</h2>
-    {% if upcoming_booking %}
-        <div class="row">
-            {% for booking in upcoming_booking %}
-            <div class="col-md-6 mb-4">
-                <div class="tile shadow-sm p-3 tile-color d-flex flex-column">
-                    <div class="tile-header mb-2">
-                        <h5 class="tile-title">{{ booking.details }}</h5>
+    <div class="row">
+        <!-- Upcoming Bookings Section (Left Half) -->
+        <div class="col-md-6">
+            <h2 class="mb-3">Upcoming Bookings</h2>
+            {% if upcoming_booking %}
+                <div class="row">
+                    {% for booking in upcoming_booking %}
+                    <div class="col-12 mb-4">
+                        <div class="tile shadow-sm p-3 tile-color">
+                            <div class="tile-header">
+                                <h5 class="tile-title">{{ booking.details }}</h5>
+                            </div>
+                            <div class="tile-body d-flex justify-content-between align-items-center">
+                                <span><strong>{{ booking.instrument }}</strong></span>
+                                <span class="booking-date-time">
+                                    <i class="fa fa-clock"></i> 
+                                    <strong class="time">{{ booking.booking_start_date_time|date:"D, M d, Y H:i" }}</strong>
+                                </span>
+                                <span class="booking-location">
+                                    <i class="fa fa-map-marker-alt"></i> 
+                                    <strong>{{ booking.location }}</strong>
+                                </span>
+                            </div>                
+                        </div>
                     </div>
-                    <div class="tile-body d-flex justify-content-between align-items-center">
-                        <span><strong>{{ booking.instrument }}</strong></span>
-                        <span class="booking-date-time">
-                            <i class="fa fa-clock"></i> 
-                            <strong class="time">{{ booking.booking_start_date_time|date:"D, M d, Y H:i" }}</strong>
-                        </span>
-                        <span class="booking-location">
-                            <i class="fa fa-map-marker-alt"></i> 
-                            <strong>{{ booking.location }}</strong>
-                        </span>
-                    </div>                
+                    {% endfor %}
                 </div>
-            </div>
-            {% endfor %}
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    You have no upcoming bookings.
+                </div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info text-center" role="alert">
-            You have no upcoming bookings.
-        </div>
-    {% endif %}
-</div>
 
-<div class="container">
-    <h2 class="mb-3">Attention for Maintenance</h2>
-    {% if instrument_owned %}
-        <div class="row">
-            {% for owned in instrument_owned %}
-            <div class="col-md-6 mb-4">
-                <div class="tile shadow-sm p-3 tile-color d-flex flex-column">
-                    <div class="tile-header mb-2">
-                        <h5 class="tile-title">{{ owned.details }}</h5>
+        <!-- Attention for Maintenance Section (Right Half) -->
+        <div class="col-md-6">
+            <h2 class="mb-3">Attention for Maintenance</h2>
+            {% if instrument_owned %}
+                <div class="row">
+                    {% for owned in instrument_owned %}
+                    <div class="col-12 mb-4">
+                        <div class="tile shadow-sm p-3 tile-color">
+                            <div class="tile-header">
+                                <h5 class="tile-title">{{ owned.details }}</h5>
+                            </div>
+                            <div class="tile-body d-flex justify-content-between align-items-center">
+                                <span><strong>{{ owned.instrument_name }}</strong></span>                    
+                                <span><i class="fa fa-calendar"></i> <strong>{{ owned.maintenance_date|date:"D, M d, Y" }}</strong></span>
+                            </div>                
+                        </div>
                     </div>
-                    <div class="tile-body d-flex justify-content-between align-items-center">
-                        <span><strong>{{ owned.instrument_name }}</strong></span>                    
-                        <span><i class="fa fa-calendar"></i> <strong>{{ owned.maintenance_date|date:"D, M d, Y" }}</strong></span>
-                    </div>                
+                    {% endfor %}
                 </div>
-            </div>
-            {% endfor %}
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    You have no upcoming maintenance.
+                </div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info text-center" role="alert">
-            You have no upcoming maintenance.
-        </div>
-    {% endif %}
+    </div>
 </div>
 
 <style>
