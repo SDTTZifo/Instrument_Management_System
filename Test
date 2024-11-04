@@ -1,174 +1,145 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <div class="container text-center mt-5">
+<div class="container text-center mt-5">
     <h1>Dashboard</h1>
-  </div>
+</div>
 
-  <div class="container mt-5">
+<div class="container mt-5">
     <div class="row">
         <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body" style="background-color: #f44336;">
-                    <div class="w3-left"> <i class="fa fa-microscope w3-xxxlarge"></i></div>
-                    <h5 class="card-title mt-3">Total Instruments</h5>
-                    <p class="card-text" id="totalInstruments">{{instrument_count}}</p>
+            <div class="tile text-center shadow-sm p-3" style="background-color: #f44336; color: white;">
+                <div class="tile-header">
+                    <i class="fa fa-microscope fa-3x"></i>
+                    <h5 class="tile-title mt-3">Total Instruments</h5>
                 </div>
+                <p class="tile-count" id="totalInstruments">{{ instrument_count }}</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body" style="background-color: #088da5;"> 
-                    <div class="w3-left"> <i class="fa fa-folder w3-xxxlarge"></i></div>                 
-                    <h5 class="card-title mt-3">Total Categories</h5>
-                    <p class="card-text" id="totalcategories">{{category_count}}</p>
+            <div class="tile text-center shadow-sm p-3" style="background-color: #088da5; color: white;">
+                <div class="tile-header">
+                    <i class="fa fa-folder fa-3x"></i>
+                    <h5 class="tile-title mt-3">Total Categories</h5>
                 </div>
+                <p class="tile-count" id="totalcategories">{{ category_count }}</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body" style="background-color: #138d75;">
-                    <div class="w3-left"> <i class="fa fa-location-dot w3-xxxlarge"></i></div>
-                   <h5 class="card-title mt-3">Total Locations</h5>
-                    <p class="card-text" id="totallocations">{{location_count}}</p>
+            <div class="tile text-center shadow-sm p-3" style="background-color: #138d75; color: white;">
+                <div class="tile-header">
+                    <i class="fa fa-location-dot fa-3x"></i>
+                    <h5 class="tile-title mt-3">Total Locations</h5>
                 </div>
+                <p class="tile-count" id="totallocations">{{ location_count }}</p>
             </div>
         </div>
     </div>
-  </div>
-  <br><br><br>
+</div>
 
-  <div class="container">
+<br><br><br>
+
+<div class="container">
     <h2 class="mb-3">Upcoming Bookings</h2>
-      {% if upcoming_booking %}
-          <div class="row">
-              {% for booking in upcoming_booking %}
-              <div class="col-md-9 mb-4">
-                <div class="tile shadow-sm p-3 tile-color">
-                  <div class="tile-header">
-                    <h5 class="tile-title">{{ booking.details }}</h5>
-                  </div>
-                  <div class="tile-body d-flex justify-content-between align-items-center">
-                    <span><strong>{{ booking.instrument }}</strong></span>
-                    <span class="booking-date-time">
-                      <i class="fa fa-clock"></i> 
-                      <strong class="time">{{ booking.booking_start_date_time }}</strong>
-                    </span>
-                    <span class="booking-location">
-                      <i class="fa fa-map-marker-alt"></i> 
-                      <strong>{{ booking.location }}</strong>
-                    </span>
-                  </div>                
+    {% if upcoming_booking %}
+        <div class="row">
+            {% for booking in upcoming_booking %}
+            <div class="col-md-6 mb-4">
+                <div class="tile shadow-sm p-3 tile-color d-flex flex-column">
+                    <div class="tile-header mb-2">
+                        <h5 class="tile-title">{{ booking.details }}</h5>
+                    </div>
+                    <div class="tile-body d-flex justify-content-between align-items-center">
+                        <span><strong>{{ booking.instrument }}</strong></span>
+                        <span class="booking-date-time">
+                            <i class="fa fa-clock"></i> 
+                            <strong class="time">{{ booking.booking_start_date_time|date:"D, M d, Y H:i" }}</strong>
+                        </span>
+                        <span class="booking-location">
+                            <i class="fa fa-map-marker-alt"></i> 
+                            <strong>{{ booking.location }}</strong>
+                        </span>
+                    </div>                
                 </div>
-              </div>
-              {% endfor %}
-          </div>
-      {% else %}
-          <div class="alert alert-info text-center" role="alert">
-              You have no upcoming bookings.
-          </div>
-      {% endif %}
-  </div>
- 
-  <div class="container">
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            You have no upcoming bookings.
+        </div>
+    {% endif %}
+</div>
+
+<div class="container">
     <h2 class="mb-3">Attention for Maintenance</h2>
-      {% if instrument_owned %}
-          <div class="row">
-              {% for owned in instrument_owned %}
-              <div class="col-md-9 mb-4">
-                <div class="tile shadow-sm p-3 tile-color">
-                  <div class="tile-header">
-                    <h5 class="tile-title">{{ owned.details }}</h5>
-                  </div>
-                  <div class="tile-body d-flex justify-content-between align-items-center">
-                    <span><strong>{{ owned.instrument_name }}</strong></span>                    
-                    <span><strong>{{ owned.maintenance_date }}</strong></span>
-                  </div>                
+    {% if instrument_owned %}
+        <div class="row">
+            {% for owned in instrument_owned %}
+            <div class="col-md-6 mb-4">
+                <div class="tile shadow-sm p-3 tile-color d-flex flex-column">
+                    <div class="tile-header mb-2">
+                        <h5 class="tile-title">{{ owned.details }}</h5>
+                    </div>
+                    <div class="tile-body d-flex justify-content-between align-items-center">
+                        <span><strong>{{ owned.instrument_name }}</strong></span>                    
+                        <span><i class="fa fa-calendar"></i> <strong>{{ owned.maintenance_date|date:"D, M d, Y" }}</strong></span>
+                    </div>                
                 </div>
-              </div>
-              {% endfor %}
-          </div>
-      {% else %}
-          <div class="alert alert-info text-center" role="alert">
-              You have no upcoming maintenance.
-          </div>
-      {% endif %} 
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            You have no upcoming maintenance.
+        </div>
+    {% endif %}
+</div>
 
-
-  <style>
+<style>
     body {
-      background-color: #f4f4f4;
+        background-color: #f4f4f4;
     }
-  
-    .card {
-      border-radius: 15px;     
-      margin-bottom: 15px;     
-    }
-  
-    .card-title {
-      margin-top: 10px;
-    }
-  
-    .card-text {
-      font-size: 24px;
-    }
-  
-    .booking-date-time, .booking-location {
-      margin: 0 10px;      
-    }
-  
-    .tile-body {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-  
     .tile {
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 15px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: transform 0.2s ease-in-out;
     }
-  
+    .tile:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .tile-header {
+        text-align: center;
+    }
+    .tile-title {
+        margin-top: 10px;
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+    .tile-count {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: 10px;
+    }
     .tile-color:nth-child(odd) {
-      background-color: #e3f2fd;
+        background-color: #e3f2fd;
     }
-  
     .tile-color:nth-child(even) {
-      background-color: #f1f8e9;
+        background-color: #f1f8e9;
     }
-  </style>
-  
-  
-  
+    .booking-date-time, .booking-location {
+        margin: 0 10px;
+        color: #333;
+    }
+</style>
 
-  <!-- Include necessary scripts and styles -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script>
-    // document.addEventListener('DOMContentLoaded', function() {
-    //   function convertUTCToLocal(utcDateTime) {
-    //     const utcDate = new Date(utcDateTime);
-    //     const localDateTime = utcDate.toLocaleString('en-IN', {
-    //       hour: '2-digit',
-    //       minute: '2-digit',
-    //       hour12: true,
-    //       timeZone: 'Asia/Kolkata'
-    //     });
-  
-    //     return localDateTime;
-    //   }
-  
-    //   const bookings = document.querySelectorAll('.booking-date-time');
-    //   bookings.forEach(function(booking) {
-    //     const timeElement = booking.querySelector('.time');
-    //     const utcDateTime = timeElement.innerText;
-    //     const localDateTime = convertUTCToLocal(utcDateTime);
-  
-    //     timeElement.innerText = localDateTime;
-    //   });
-    // });
-  </script>
-   
+<!-- Include necessary scripts and styles -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
 {% endblock %}
