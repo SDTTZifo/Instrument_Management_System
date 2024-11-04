@@ -1,45 +1,35 @@
 <form method="post" action="{% url 'login' %}">
     {% csrf_token %}
-    {{ form.non_field_errors }}
-    {{ form.username.errors }}
-    {{ form.username }}
-    {{ form.password.errors }}
-    {{ form.password }}
-    
-    <button type="submit">Login</button>
-</form>
-<form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div id="username-errors" class="alert alert-danger">
-        {{ form.username.errors }}
-    </div>
-    {{ form.username }}
-    <div id="password-errors" class="alert alert-danger">
-        {{ form.password.errors }}
-    </div>
-    {{ form.password }}
-    
-    <button type="submit">Login</button>
-</form>
 
+    {% if form.non_field_errors %}
+        <div id="error-messages" class="alert alert-danger" style="display: none;">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    {{ form.username }}
+    {{ form.password }}
+    <button type="submit">Login</button>
+</form>
 <script>
     window.onload = function() {
-        // Clear non-field errors
-        const nonFieldErrors = document.querySelectorAll('.alert.alert-danger');
-        nonFieldErrors.forEach(function(error) {
-            error.remove();
-        });
-
-        // Optionally, clear specific field errors as well
-        const usernameErrors = document.getElementById('username-errors');
-        if (usernameErrors) {
-            usernameErrors.remove();
+        const errorMessages = document.getElementById('error-messages');
+        // Check if the page was refreshed and only display error messages if not
+        if (sessionStorage.getItem('refreshed') !== 'true' && errorMessages) {
+            errorMessages.style.display = 'block';
         }
+        // Remove the refresh flag after handling
+        sessionStorage.removeItem('refreshed');
+    };
+</script>
+<script>
+    // Set a session storage flag if the page is being unloaded
+    window.onbeforeunload = function () {
+        sessionStorage.setItem('refreshed', 'true');
+    };
 
-        const passwordErrors = document.getElementById('password-errors');
-        if (passwordErrors) {
-            passwordErrors.remove();
-        }
+    // Clear the flag on page load
+    window.onload = function () {
+        sessionStorage.removeItem('refreshed');
     };
 </script>
