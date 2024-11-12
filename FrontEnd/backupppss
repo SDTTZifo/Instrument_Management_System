@@ -966,3 +966,73 @@ public partial class AdverseEffect
 }
 
 
+Chat::::::::::::::::::::::::::::::::::::::
+
+public class TrialType : ObjectGraphType<ClinicalTrial>
+{
+    public TrialType()
+    {
+        Field(x => x.Id);
+        Field(x => x.Name);
+        Field(x => x.CurrentStatus);
+        Field(x => x.Phase);
+        Field(x => x.StartDate);
+        Field(x => x.EndDate);
+
+        // Resolving related experiments and drugs
+        Field<ListGraphType<ExperimentType>>(
+            "experiments",
+            resolve: context => context.Source.Experiments
+        );
+
+        Field<ListGraphType<AdverseEffectType>>(
+            "adverseEffects",
+            resolve: context => context.Source.AdverseEffects
+        );
+
+        Field<ListGraphType<BannedComponentType>>(
+            "bannerComponents",
+            resolve: context => context.Source.BannedComponents
+        );
+
+        Field<ListGraphType<DrugType>>(
+            "drugs",
+            resolve: context => context.Source.Drugs
+        );
+    }
+}
+
+
+public class ClinicalTrialQuery : ObjectGraphType
+{
+    public ClinicalTrialQuery(SdttContext dbContext)
+    {
+        // Query for all Trials
+        Field<ListGraphType<TrialType>>(
+            "trials",
+            resolve: context => dbContext.ClinicalTrials.Include(t => t.Experiments).Include(t => t.Drugs).ToList() // Include related entities
+        );
+
+        // Query for a single Trial by ID
+        Field<TrialType>(
+            "trial",
+            arguments: new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "id" }
+            ),
+            resolve: context =>
+            {
+                var trialId = context.GetArgument<int>("id");
+                return dbContext.ClinicalTrials
+                    .Include(t => t.Experiments)
+                    .Include(t => t.Drugs)
+                    .FirstOrDefault(t => t.Id == trialId);
+            }
+        );
+
+        // Other queries for banner components, adverse effects, etc.
+        Field<ListGraphType<BannedComponentType>>(
+            "bannerComponents",
+            resolve: context => dbContext.BannedComponents.ToList()
+        );
+    }
+}
