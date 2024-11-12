@@ -568,3 +568,78 @@ app.Run();
     hasGeneticModification
   }
 }
+
+
+
+using GraphQL.Types;
+using ClinicalTrialsGraphQL.Models;  // Assuming you have models like Trial, Experiment, etc.
+
+namespace ClinicalTrialsGraphQL.GraphQL.Types
+{
+    // TrialType for querying clinical trials
+    public class TrialType : ObjectGraphType<Trial>
+    {
+        public TrialType()
+        {
+            Field(x => x.Id);
+            Field(x => x.Name);
+            Field(x => x.Status);
+            Field(x => x.Phase);
+            Field(x => x.ExperimentType);
+            Field<ListGraphType<ExperimentType>>("experiments");
+            Field<ListGraphType<AdverseEffectType>>("adverseEffects");
+            Field<DrugType>("drug");
+            Field<ListGraphType<BannerComponentType>>("bannerComponents");
+        }
+    }
+
+    // ExperimentType for querying experiment data
+    public class ExperimentType : ObjectGraphType<Experiment>
+    {
+        public ExperimentType()
+        {
+            Field(x => x.Id);
+            Field(x => x.Species);
+            Field(x => x.GeneticFocus);
+            Field(x => x.NumberOfSubjects);
+            Field(x => x.HasGeneticModification);
+        }
+    }
+
+    // DrugType for querying drug information
+    public class DrugType : ObjectGraphType<Drug>
+    {
+        public DrugType()
+        {
+            Field(x => x.Id);
+            Field(x => x.Name);
+            Field(x => x.Status);
+            Field(x => x.ApprovalStatus);
+        }
+    }
+
+    // AdverseEffectType for querying adverse effects from clinical trials
+    public class AdverseEffectType : ObjectGraphType<AdverseEffect>
+    {
+        public AdverseEffectType()
+        {
+            Field(x => x.Id);
+            Field(x => x.SideEffect);
+            Field(x => x.Severity);
+            Field(x => x.Frequency);
+        }
+    }
+
+    // BannerComponentType for querying banned components and regulatory actions
+    public class BannerComponentType : ObjectGraphType<BannerComponent>
+    {
+        public BannerComponentType()
+        {
+            Field(x => x.Id);
+            Field(x => x.ComponentName);
+            Field(x => x.BanReason);
+            Field(x => x.RegulatoryAction);
+        }
+    }
+}
+
