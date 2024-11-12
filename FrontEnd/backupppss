@@ -1,0 +1,54 @@
+Clinical Trial Data Management with GraphQL
+
+Project Overview:
+	
+	This is a GraphQL demo application designed to highlight the capabilities of GraphQL in handling complex queries and nested querying. It is not a web application but a GraphQL API application. The focus will be on performing advanced queries through the GraphQL API console.
+	
+	Clinical trials generate vast amounts of data crucial for developing new drugs and treatments. Managing this data, ranging from patient information to genetic experiments and trial outcomes—requires efficient tools. A GraphQL-based Clinical Trial Data Management system streamlines the querying, analysis, and management of these datasets, facilitating insight generation, progress tracking, and regulatory compliance.
+	
+Example:
+	
+	A pharmaceutical company is advancing a new cancer drug, "ABC," targeting genetic markers for breast cancer. As the drug moves into human trials, the company needs to manage and analyze extensive data, including patient records, genetic information, trial results, and regulatory statuses. This application provides the necessary infrastructure to handle these complexities efficiently.
+	
+Use cases:
+
+	1. Trial Status and Progress Tracking
+		○ Objective: Track the current status and progress of ongoing and completed clinical trials.
+		○ Details:
+			§ Experiment Information:
+				□ Type: Genetic experiments.
+				□ Subjects: Humans, animals or birds.
+			§ Status:
+				□ Trials can be categorized as Ongoing, Completed, Approved, Published to Market, or Terminated/Banned.
+				□ Detailed status reporting, including milestones like Phase I/II/III completion, Regulatory Approval, and Market Launch.
+				
+	2. Genetic Experiment Details
+		○ Objective: Retrieve detailed information on genetic experiments conducted during clinical trials.
+		○ Details:
+			§ Experiment Information:
+				□ Species: Animals (e.g., rodents, primates), humans.
+				□ Genetic Focus: Identifying genetic markers associated with adverse reactions.
+				□ Subject Information: Number of subjects, species, and genetic modifications.
+	
+	3. Drug Approval and Market Release Status
+		○ Objective: Query the approval status and market release information for drugs tested in clinical trials.
+		○ Details:
+			§ Approval Information:
+				□ Drugs can be in various stages: Approved, Awaiting Approval, Banned, or Published to Market.
+				□ Status updates can include reasons for rejection or banning (e.g., adverse effects, insufficient efficacy).
+				
+	4. Adverse Effects and Safety Monitoring
+		○ Objective: Monitor and query data on adverse effects reported during and after clinical trials.
+		○ Details:
+			§ Experiment Information:
+				□ Subjects: Human, animal, bird trials.
+				□ Adverse Effects: Reported side effects, severity, frequency.
+				□ Safety Measures: Monitoring protocols, risk assessments.
+				
+	5. Banned Components and Regulatory Compliance
+		○ Objective: Query information on components or drugs banned during trials due to regulatory or safety concerns.
+		○ Details:
+			§ Banned Components:
+				□ Reasons for Ban: Adverse effects, environmental impact, ethical concerns.
+				□ Regulatory Actions: Recall, market withdrawal, legal implications.
+
