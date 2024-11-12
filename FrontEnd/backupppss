@@ -52,3 +52,234 @@ Use cases:
 				□ Reasons for Ban: Adverse effects, environmental impact, ethical concerns.
 				□ Regulatory Actions: Recall, market withdrawal, legal implications.
 
+
+
+// Models/Trial.cs
+public class Trial
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Status { get; set; }
+    public string Phase { get; set; }
+    public string ExperimentType { get; set; }
+    public List<Experiment> Experiments { get; set; } = new List<Experiment>();
+    public List<AdverseEffect> AdverseEffects { get; set; } = new List<AdverseEffect>();
+    public Drug Drug { get; set; }
+}
+
+// Models/Experiment.cs
+public class Experiment
+{
+    public int Id { get; set; }
+    public string Species { get; set; }
+    public string GeneticFocus { get; set; }
+    public int NumberOfSubjects { get; set; }
+    public bool HasGeneticModification { get; set; }
+    public int TrialId { get; set; }
+    public Trial Trial { get; set; }
+}
+
+// Models/Drug.cs
+public class Drug
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string ApprovalStatus { get; set; }
+    public string MarketReleaseStatus { get; set; }
+    public string BanReason { get; set; }
+}
+
+// Models/AdverseEffect.cs
+public class AdverseEffect
+{
+    public int Id { get; set; }
+    public string Effect { get; set; }
+    public string Severity { get; set; }
+    public string Frequency { get; set; }
+    public int TrialId { get; set; }
+    public Trial Trial { get; set; }
+}
+
+
+// GraphQL/Types/TrialType.cs
+public class TrialType : ObjectGraphType<Trial>
+{
+    public TrialType()
+    {
+        Field(x => x.Id);
+        Field(x => x.Name);
+        Field(x => x.Status);
+        Field(x => x.Phase);
+        Field(x => x.ExperimentType);
+        Field<ListGraphType<ExperimentType>>("experiments");
+        Field<ListGraphType<AdverseEffectType>>("adverseEffects");
+        Field<DrugType>("drug");
+    }
+}
+
+// GraphQL/Types/ExperimentType.cs
+public class ExperimentType : ObjectGraphType<Experiment>
+{
+    public ExperimentType()
+    {
+        Field(x => x.Id);
+        Field(x => x.Species);
+        Field(x => x.GeneticFocus);
+        Field(x => x.NumberOfSubjects);
+        Field(x => x.HasGeneticModification);
+    }
+}
+
+// Similarly create DrugType and AdverseEffectType
+public class DrugType : ObjectGraphType<Drug>
+    {
+        public DrugType()
+        {
+            Field(x => x.Id).Description("The ID of the drug.");
+            Field(x => x.Name).Description("The name of the drug.");
+            Field(x => x.ApprovalStatus).Description("The approval status of the drug (e.g., Approved, Awaiting Approval, Banned).");
+            Field(x => x.MarketReleaseStatus, nullable: true).Description("The market release status of the drug, if available.");
+            Field(x => x.BanReason, nullable: true).Description("The reason for banning the drug, if applicable.");
+        }
+    }
+
+public class AdverseEffectType : ObjectGraphType<AdverseEffect>
+    {
+        public AdverseEffectType()
+        {
+            Field(x => x.Id).Description("The ID of the adverse effect.");
+            Field(x => x.Effect).Description("The description of the adverse effect.");
+            Field(x => x.Severity).Description("The severity level of the adverse effect (e.g., Mild, Moderate, Severe).");
+            Field(x => x.Frequency).Description("The frequency of occurrence of the adverse effect.");
+        }
+    }
+
+
+// GraphQL/Queries/ClinicalTrialsQuery.cs
+public class ClinicalTrialsQuery : ObjectGraphType
+{
+    public ClinicalTrialsQuery(ClinicalTrialsDbContext dbContext)
+    {
+        Field<ListGraphType<TrialType>>(
+            "trials",
+            resolve: context => dbContext.Trials.Include(t => t.Experiments).Include(t => t.AdverseEffects).Include(t => t.Drug)
+        );
+
+        Field<ListGraphType<ExperimentType>>(
+            "experiments",
+            resolve: context => dbContext.Experiments
+        );
+
+        Field<ListGraphType<DrugType>>(
+            "drugs",
+            resolve: context => dbContext.Drugs
+        );
+
+        Field<ListGraphType<AdverseEffectType>>(
+            "adverseEffects",
+            resolve: context => dbContext.AdverseEffects
+        );
+    }
+}
+
+// GraphQL/ClinicalTrialsSchema.cs
+public class ClinicalTrialsSchema : Schema
+{
+    public ClinicalTrialsSchema(IServiceProvider provider) : base(provider)
+    {
+        Query = provider.GetRequiredService<ClinicalTrialsQuery>();
+    }
+}
+
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddDbContext<ClinicalTrialsDbContext>(options =>
+        options.UseSqlServer("Your_Connection_String"));
+
+    services.AddScoped<ClinicalTrialsQuery>();
+    services.AddScoped<TrialType>();
+    services.AddScoped<ExperimentType>();
+    services.AddScoped<DrugType>();
+    services.AddScoped<AdverseEffectType>();
+    services.AddScoped<ISchema, ClinicalTrialsSchema>();
+
+    services.AddGraphQL(options =>
+    {
+        options.EnableMetrics = false;
+    })
+    .AddSystemTextJson()
+    .AddGraphTypes(ServiceLifetime.Scoped);
+}
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+{
+    if (env.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+    }
+
+    app.UseRouting();
+
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapGraphQL("/graphql");
+    });
+
+    app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
+    {
+        Path = "/playground"
+    });
+}
+
+
+query {
+    trials(where: { status: "Ongoing", phase: "Phase III" }) {
+        name
+        status
+        phase
+        experiments {
+            experimentType
+            species
+        }
+    }
+}
+
+
+query {
+    experiments(where: { geneticFocus: "Markers for Adverse Reactions" }) {
+        species
+        numberOfSubjects
+        hasGeneticModification
+        trial {
+            name
+            status
+        }
+    }
+}
+
+query {
+    drugs(where: { approvalStatus: "Approved" }) {
+        name
+        approvalStatus
+        marketReleaseStatus
+    }
+}
+
+query {
+    adverseEffects(where: { severity: "High" }) {
+        effect
+        frequency
+        trial {
+            name
+            status
+        }
+    }
+}
+
+query {
+    drugs(where: { banReason: { neq: null } }) {
+        name
+        banReason
+    }
+}
+
+
