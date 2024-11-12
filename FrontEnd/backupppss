@@ -154,6 +154,25 @@ public class AdverseEffectType : ObjectGraphType<AdverseEffect>
         }
     }
 
+// GraphQL/Types/BannerComponentType.cs
+using GraphQL.Types;
+using ClinicalTrialsGraphQL.Models;
+
+namespace ClinicalTrialsGraphQL.GraphQL.Types
+{
+    public class BannerComponentType : ObjectGraphType<BannerComponent>
+    {
+        public BannerComponentType()
+        {
+            Field(x => x.Id).Description("The ID of the banned component.");
+            Field(x => x.ComponentName).Description("The name of the banned component.");
+            Field(x => x.BanReason).Description("The reason for banning the component (e.g., Adverse effects, ethical concerns).");
+            Field(x => x.RegulatoryAction).Description("The regulatory action taken against the banned component (e.g., Recall, Market Withdrawal).");
+        }
+    }
+}
+
+
 
 // GraphQL/Queries/ClinicalTrialsQuery.cs
 public class ClinicalTrialsQuery : ObjectGraphType
@@ -182,12 +201,62 @@ public class ClinicalTrialsQuery : ObjectGraphType
     }
 }
 
+// GraphQL/Queries/ClinicalTrialQuery.cs
+using GraphQL.Types;
+using ClinicalTrialsGraphQL.Data;
+using ClinicalTrialsGraphQL.Models;
+
+namespace ClinicalTrialsGraphQL.GraphQL.Queries
+{
+    public class ClinicalTrialQuery : ObjectGraphType
+    {
+        public ClinicalTrialQuery(ClinicalTrialsDbContext dbContext)
+        {
+            Field<ListGraphType<TrialType>>(
+                "trials",
+                resolve: context => dbContext.Trials.ToList()
+            );
+
+            // Query to fetch Banner Components by Trial ID
+            Field<ListGraphType<BannerComponentType>>(
+                "bannerComponents",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "trialId" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int?>("trialId");
+                    return trialId == null
+                        ? dbContext.BannerComponents.ToList()
+                        : dbContext.BannerComponents.Where(b => b.TrialId == trialId).ToList();
+                }
+            );
+        }
+    }
+}
+
+
 // GraphQL/ClinicalTrialsSchema.cs
 public class ClinicalTrialsSchema : Schema
 {
     public ClinicalTrialsSchema(IServiceProvider provider) : base(provider)
     {
         Query = provider.GetRequiredService<ClinicalTrialsQuery>();
+    }
+}
+
+// GraphQL/Schema/ClinicalTrialSchema.cs
+using GraphQL.Types;
+using ClinicalTrialsGraphQL.GraphQL.Queries;
+
+namespace ClinicalTrialsGraphQL.GraphQL
+{
+    public class ClinicalTrialSchema : Schema
+    {
+        public ClinicalTrialSchema(ClinicalTrialQuery query)
+        {
+            Query = query;
+        }
     }
 }
 
@@ -283,3 +352,219 @@ query {
 }
 
 
+
+
+// GraphQL/Queries/ClinicalTrialQuery.cs
+using GraphQL.Types;
+using ClinicalTrialsGraphQL.Data;
+using ClinicalTrialsGraphQL.Models;
+using System.Linq;
+
+namespace ClinicalTrialsGraphQL.GraphQL.Queries
+{
+    public class ClinicalTrialQuery : ObjectGraphType
+    {
+        public ClinicalTrialQuery(ClinicalTrialsDbContext dbContext)
+        {
+            // Query for all Trials
+            Field<ListGraphType<TrialType>>(
+                "trials",
+                resolve: context => dbContext.Trials.ToList()
+            );
+
+            // Query for a single Trial by ID
+            Field<TrialType>(
+                "trial",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "id" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int>("id");
+                    return dbContext.Trials.FirstOrDefault(t => t.Id == trialId);
+                }
+            );
+
+            // Query for all Banner Components
+            Field<ListGraphType<BannerComponentType>>(
+                "bannerComponents",
+                resolve: context => dbContext.BannerComponents.ToList()
+            );
+
+            // Query for Banner Components filtered by Trial ID
+            Field<ListGraphType<BannerComponentType>>(
+                "bannerComponentsByTrial",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "trialId" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int?>("trialId");
+                    return trialId == null
+                        ? dbContext.BannerComponents.ToList()
+                        : dbContext.BannerComponents.Where(b => b.TrialId == trialId).ToList();
+                }
+            );
+
+            // Query for all Experiments
+            Field<ListGraphType<ExperimentType>>(
+                "experiments",
+                resolve: context => dbContext.Experiments.ToList()
+            );
+
+            // Query for a single Experiment by ID
+            Field<ExperimentType>(
+                "experiment",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "id" }
+                ),
+                resolve: context =>
+                {
+                    var experimentId = context.GetArgument<int>("id");
+                    return dbContext.Experiments.FirstOrDefault(e => e.Id == experimentId);
+                }
+            );
+
+            // Query for all Drugs
+            Field<ListGraphType<DrugType>>(
+                "drugs",
+                resolve: context => dbContext.Drugs.ToList()
+            );
+
+            // Query for a single Drug by ID
+            Field<DrugType>(
+                "drug",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "id" }
+                ),
+                resolve: context =>
+                {
+                    var drugId = context.GetArgument<int>("id");
+                    return dbContext.Drugs.FirstOrDefault(d => d.Id == drugId);
+                }
+            );
+
+            // Query for all Adverse Effects
+            Field<ListGraphType<AdverseEffectType>>(
+                "adverseEffects",
+                resolve: context => dbContext.AdverseEffects.ToList()
+            );
+
+            // Query for Adverse Effects by Trial ID
+            Field<ListGraphType<AdverseEffectType>>(
+                "adverseEffectsByTrial",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "trialId" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int?>("trialId");
+                    return trialId == null
+                        ? dbContext.AdverseEffects.ToList()
+                        : dbContext.AdverseEffects.Where(a => a.TrialId == trialId).ToList();
+                }
+            );
+        }
+    }
+}
+
+// GraphQL/Schema/ClinicalTrialSchema.cs
+using GraphQL.Types;
+using ClinicalTrialsGraphQL.GraphQL.Queries;
+
+namespace ClinicalTrialsGraphQL.GraphQL
+{
+    public class ClinicalTrialSchema : Schema
+    {
+        public ClinicalTrialSchema(ClinicalTrialQuery query)
+        {
+            Query = query;  // This sets the root query for GraphQL to `ClinicalTrialQuery`
+        }
+    }
+}
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<ClinicalTrialQuery>();  // Register the query
+builder.Services.AddScoped<ISchema, ClinicalTrialSchema>();  // Register the schema
+
+builder.Services.AddGraphQL(options =>
+{
+    options.EnableMetrics = false;  // Optional: Disable metrics for simplicity
+})
+.AddSystemTextJson()  // Add support for JSON serialization
+.AddGraphTypes(ServiceLifetime.Scoped);  // Add GraphQL types (register all GraphQL types in scoped lifetime)
+
+var app = builder.Build();
+
+// Configure the GraphQL endpoint
+app.UseGraphQL<ISchema>();
+
+app.Run();
+
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+{
+    app.UseRouting();
+
+    // Enable GraphQL Playground UI for testing
+    app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
+    {
+        Path = "/graphql",  // Path to access GraphQL playground
+        QueryPath = "/graphql"
+    });
+
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapGraphQL();  // Map the GraphQL endpoint to /graphql
+    });
+}
+
+var app = builder.Build();
+
+app.UseRouting();
+
+// Enable GraphQL Playground UI for testing
+app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
+{
+    Path = "/graphql",  // Path to access GraphQL playground
+    QueryPath = "/graphql"
+});
+
+app.MapGraphQL();  // Map the GraphQL endpoint to /graphql
+
+app.Run();
+
+
+{
+  trials {
+    id
+    name
+    status
+    phase
+    experimentType
+    drug {
+      id
+      name
+    }
+  }
+}
+
+{
+  bannerComponents {
+    id
+    componentName
+    banReason
+    regulatoryAction
+  }
+}
+
+{
+  experiment(id: 1) {
+    id
+    species
+    geneticFocus
+    numberOfSubjects
+    hasGeneticModification
+  }
+}
