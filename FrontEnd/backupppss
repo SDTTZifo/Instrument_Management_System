@@ -643,3 +643,326 @@ namespace ClinicalTrialsGraphQL.GraphQL.Types
     }
 }
 
+
+
+using GraphQL.Types;
+using GraphQL_Presentation_Demo.Models;
+
+namespace GraphQL_Presentation_Demo.GraphQL
+{
+    public class TrialType : ObjectGraphType<ClinicalTrial>
+    {
+        public TrialType()
+        {
+            Field(x => x.Id);
+            Field(x => x.Name);
+            Field(x => x.CurrentStatus);
+            Field(x => x.Phase);
+            Field(x => x.StartDate);
+            Field(x => x.EndDate);
+            Field<ListGraphType<ExperimentType>>("experiments");
+            Field<ListGraphType<AdverseEffectType>>("adverseEffects");
+            Field<DrugType>("drug");
+        }
+    }
+
+    public class ExperimentType : ObjectGraphType<Experiment>
+    {
+        public ExperimentType()
+        {
+            Field(x => x.Id);
+            Field(x => x.Species);
+            Field(x => x.GeneticFocus);
+            Field(x => x.SubjectCount);
+            Field(x => x.Type);
+            Field(x => x.ClinicalTrialId);
+            Field(x => x.SubjectType);
+        }
+    }
+
+    public class DrugType : ObjectGraphType<Drug>
+    {
+        public DrugType()
+        {
+            Field(x => x.Id).Description("The ID of the drug.");
+            Field(x => x.Name).Description("The name of the drug.");
+            Field(x => x.ApprovalStatus).Description("The approval status of the drug (e.g., Approved, Awaiting Approval, Banned).");
+            Field(x => x.MarketStatus, nullable: true).Description("The market release status of the drug, if available.");
+            Field(x => x.ClinicalTrialId);
+        }
+    }
+    public class BannedComponentType : ObjectGraphType<BannedComponent>
+    {
+        public BannedComponentType()
+        {
+            Field(x => x.Id).Description("The ID of the banned component.");
+            Field(x => x.Name).Description("The name of the banned component.");
+            Field(x => x.ReasonForBan).Description("The reason for banning the component (e.g., Adverse effects, ethical concerns).");
+            Field(x => x.RegulatoryActions).Description("The regulatory action taken against the banned component (e.g., Recall, Market Withdrawal).");
+            Field(x => x.ClinicalTrialId);
+        }
+    }
+
+    public class AdverseEffectType : ObjectGraphType<AdverseEffect>
+    {
+        public AdverseEffectType()
+        {
+            Field(x => x.Id).Description("The ID of the adverse effect.");
+            Field(x => x.Effect).Description("The description of the adverse effect.");
+            Field(x => x.Severity).Description("The severity level of the adverse effect (e.g., Mild, Moderate, Severe).");
+            Field(x => x.Frequency).Description("The frequency of occurrence of the adverse effect.");
+            Field(x => x.ClinicalTrialId);
+        }
+    }
+
+
+
+}
+
+
+using GraphQL;
+using GraphQL.Types;
+
+namespace GraphQL_Presentation_Demo.GraphQL
+{
+    public class ClinicalTrialsSchema : Schema
+    {
+        public ClinicalTrialsSchema(IServiceProvider provider) : base(provider)
+        {
+            Query = provider.GetRequiredService<ClinicalTrialQuery>();
+        }
+    }
+}
+
+
+using GraphQL.Types;
+using GraphQL_Presentation_Demo.GraphQL;
+using GraphQL_Presentation_Demo.Models;
+using GraphQL;
+
+namespace GraphQL_Presentation_Demo.GraphQL
+{
+    public class ClinicalTrialQuery : ObjectGraphType
+    {
+        public ClinicalTrialQuery(SdttContext dbContext)
+        {
+            // Query for all Trials
+            Field<ListGraphType<TrialType>>(
+                "trials",
+                resolve: context => dbContext.ClinicalTrials.ToList()
+            );
+
+            // Query for a single Trial by ID
+            Field<TrialType>(
+                "trial",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "id" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int>("id");
+                    return dbContext.ClinicalTrials.FirstOrDefault(t => t.Id == trialId);
+                }
+            );
+
+            // Query for all Banner Components
+            Field<ListGraphType<BannedComponentType>>(
+                "bannerComponents",
+                resolve: context => dbContext.BannedComponents.ToList()
+            );
+
+            // Query for Banner Components filtered by Trial ID
+            Field<ListGraphType<BannedComponentType>>(
+                "bannerComponentsByTrial",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "trialId" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int?>("trialId");
+                    return trialId == null
+                        ? dbContext.BannedComponents.ToList()
+                        : dbContext.BannedComponents.Where(b => b.ClinicalTrialId == trialId).ToList();
+                }
+            );
+
+            // Query for all Experiments
+            Field<ListGraphType<ExperimentType>>(
+                "experiments",
+                resolve: context => dbContext.Experiments.ToList()
+            );
+
+            // Query for a single Experiment by ID
+            Field<ExperimentType>(
+                "experiment",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "id" }
+                ),
+                resolve: context =>
+                {
+                    var experimentId = context.GetArgument<int>("id");
+                    return dbContext.Experiments.FirstOrDefault(e => e.Id == experimentId);
+                }
+            );
+
+            // Query for all Drugs
+            Field<ListGraphType<DrugType>>(
+                "drugs",
+                resolve: context => dbContext.Drugs.ToList()
+            );
+
+            // Query for a single Drug by ID
+            Field<DrugType>(
+                "drug",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "id" }
+                ),
+                resolve: context =>
+                {
+                    var drugId = context.GetArgument<int>("id");
+                    return dbContext.Drugs.FirstOrDefault(d => d.Id == drugId);
+                }
+            );
+
+            // Query for all Adverse Effects
+            Field<ListGraphType<AdverseEffectType>>(
+                "adverseEffects",
+                resolve: context => dbContext.AdverseEffects.ToList()
+            );
+
+            // Query for Adverse Effects by Trial ID
+            Field<ListGraphType<AdverseEffectType>>(
+                "adverseEffectsByTrial",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "trialId" }
+                ),
+                resolve: context =>
+                {
+                    var trialId = context.GetArgument<int?>("trialId");
+                    return trialId == null
+                        ? dbContext.AdverseEffects.ToList()
+                        : dbContext.AdverseEffects.Where(a => a.ClinicalTrialId == trialId).ToList();
+                }
+            );
+        }
+    }
+}
+
+databasemodels
+
+namespace GraphQL_Presentation_Demo.Models;
+
+public partial class ClinicalTrial
+{
+    public int Id { get; set; }
+
+    public string? Name { get; set; }
+
+    public string? Phase { get; set; }
+
+    public DateTime? StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public string? CurrentStatus { get; set; }
+
+    public virtual ICollection<AdverseEffect> AdverseEffects { get; set; } = new List<AdverseEffect>();
+
+    public virtual ICollection<BannedComponent> BannedComponents { get; set; } = new List<BannedComponent>();
+
+    public virtual ICollection<Drug> Drugs { get; set; } = new List<Drug>();
+
+    public virtual ICollection<Experiment> Experiments { get; set; } = new List<Experiment>();
+
+    public virtual ICollection<SafetyMeasure> SafetyMeasures { get; set; } = new List<SafetyMeasure>();
+}
+
+using System;
+using System.Collections.Generic;
+
+namespace GraphQL_Presentation_Demo.Models;
+
+public partial class Drug
+{
+    public int Id { get; set; }
+
+    public string? Name { get; set; }
+
+    public string? ApprovalStatus { get; set; }
+
+    public string? MarketStatus { get; set; }
+
+    public int? ClinicalTrialId { get; set; }
+
+    public virtual ClinicalTrial? ClinicalTrial { get; set; }
+}
+
+using System;
+using System.Collections.Generic;
+
+namespace GraphQL_Presentation_Demo.Models;
+
+public partial class Experiment
+{
+    public int Id { get; set; }
+
+    public int? ClinicalTrialId { get; set; }
+
+    public string? Type { get; set; }
+
+    public string? Species { get; set; }
+
+    public string? GeneticFocus { get; set; }
+
+    public string? SubjectType { get; set; }
+
+    public int? SubjectCount { get; set; }
+
+    public virtual ClinicalTrial? ClinicalTrial { get; set; }
+}
+
+using System;
+using System.Collections.Generic;
+
+namespace GraphQL_Presentation_Demo.Models;
+
+public partial class BannedComponent
+{
+    public int Id { get; set; }
+
+    public string? Name { get; set; }
+
+    public int? ClinicalTrialId { get; set; }
+
+    public string? ReasonForBan { get; set; }
+
+    public string? RegulatoryActions { get; set; }
+
+    public DateTime? ActionDate { get; set; }
+
+    public virtual ClinicalTrial? ClinicalTrial { get; set; }
+}
+
+using System;
+using System.Collections.Generic;
+
+namespace GraphQL_Presentation_Demo.Models;
+
+public partial class AdverseEffect
+{
+    public int Id { get; set; }
+
+    public int? ClinicalTrialId { get; set; }
+
+    public string? Effect { get; set; }
+
+    public string? Severity { get; set; }
+
+    public string? Frequency { get; set; }
+
+    public string? SubjectType { get; set; }
+
+    public virtual ClinicalTrial? ClinicalTrial { get; set; }
+}
+
+
