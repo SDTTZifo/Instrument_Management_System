@@ -1036,3 +1036,121 @@ public class ClinicalTrialQuery : ObjectGraphType
         );
     }
 }
+
+
+public class ClinicalTrialQuery : ObjectGraphType
+{
+    public ClinicalTrialQuery(SdttContext dbContext)
+    {
+        // Query for all Trials with complex filters
+        Field<ListGraphType<TrialType>>(
+            "trials",
+            arguments: new QueryArguments(
+                new QueryArgument<StringGraphType> { Name = "status" },
+                new QueryArgument<StringGraphType> { Name = "phase" },
+                new QueryArgument<DateTimeGraphType> { Name = "startDate" },
+                new QueryArgument<DateTimeGraphType> { Name = "endDate" }
+            ),
+            resolve: context =>
+            {
+                var query = dbContext.ClinicalTrials.Include(t => t.Experiments).Include(t => t.Drugs);
+                var status = context.GetArgument<string>("status");
+                var phase = context.GetArgument<string>("phase");
+                var startDate = context.GetArgument<DateTime?>("startDate");
+                var endDate = context.GetArgument<DateTime?>("endDate");
+
+                if (!string.IsNullOrEmpty(status))
+                    query = query.Where(t => t.CurrentStatus == status);
+
+                if (!string.IsNullOrEmpty(phase))
+                    query = query.Where(t => t.Phase == phase);
+
+                if (startDate.HasValue)
+                    query = query.Where(t => t.StartDate >= startDate.Value);
+
+                if (endDate.HasValue)
+                    query = query.Where(t => t.EndDate <= endDate.Value);
+
+                return query.ToList();
+            }
+        );
+
+        // Query for a single Trial by ID
+        Field<TrialType>(
+            "trial",
+            arguments: new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "id" }
+            ),
+            resolve: context =>
+            {
+                var trialId = context.GetArgument<int>("id");
+                return dbContext.ClinicalTrials
+                    .Include(t => t.Experiments)
+                    .Include(t => t.Drugs)
+                    .FirstOrDefault(t => t.Id == trialId);
+            }
+        );
+
+        // Query for Drugs used in Clinical Trials with filtering
+        Field<ListGraphType<DrugType>>(
+            "drugsByTrial",
+            arguments: new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "trialId" }
+            ),
+            resolve: context =>
+            {
+                var trialId = context.GetArgument<int>("trialId");
+                return dbContext.Drugs
+                    .Where(d => d.ClinicalTrialId == trialId)
+                    .ToList();
+            }
+        );
+
+        // Query for all Experiments filtered by ClinicalTrialId
+        Field<ListGraphType<ExperimentType>>(
+            "experimentsByTrial",
+            arguments: new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "trialId" }
+            ),
+            resolve: context =>
+            {
+                var trialId = context.GetArgument<int>("trialId");
+                return dbContext.Experiments
+                    .Where(e => e.ClinicalTrialId == trialId)
+                    .ToList();
+            }
+        );
+
+        // Query for Banned Components filtered by ClinicalTrialId
+        Field<ListGraphType<BannedComponentType>>(
+            "bannerComponentsByTrial",
+            arguments: new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "trialId" }
+            ),
+            resolve: context =>
+            {
+                var trialId = context.GetArgument<int>("trialId");
+                return dbContext.BannedComponents
+                    .Where(b => b.ClinicalTrialId == trialId)
+                    .ToList();
+            }
+        );
+
+        // Query for Adverse Effects filtered by ClinicalTrialId
+        Field<ListGraphType<AdverseEffectType>>(
+            "adverseEffectsByTrial",
+            arguments: new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "trialId" }
+            ),
+            resolve: context =>
+            {
+                var trialId = context.GetArgument<int>("trialId");
+                return dbContext.AdverseEffects
+                    .Where(a => a.ClinicalTrialId == trialId)
+                    .ToList();
+            }
+        );
+    }
+}
+
+
