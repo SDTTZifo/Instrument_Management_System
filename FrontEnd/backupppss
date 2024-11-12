@@ -1037,23 +1037,26 @@ public class ClinicalTrialQuery : ObjectGraphType
     }
 }
 
-
 public class ClinicalTrialQuery : ObjectGraphType
 {
     public ClinicalTrialQuery(SdttContext dbContext)
     {
-        // Query for all Trials with complex filters
+        // Query for all Trials with complex filters and sorting
         Field<ListGraphType<TrialType>>(
             "trials",
             arguments: new QueryArguments(
                 new QueryArgument<StringGraphType> { Name = "status" },
                 new QueryArgument<StringGraphType> { Name = "phase" },
                 new QueryArgument<DateTimeGraphType> { Name = "startDate" },
-                new QueryArgument<DateTimeGraphType> { Name = "endDate" }
+                new QueryArgument<DateTimeGraphType> { Name = "endDate" },
+                new QueryArgument<StringGraphType> { Name = "sortBy" },   // New: field to sort by
+                new QueryArgument<StringGraphType> { Name = "sortOrder" }  // New: order (asc/desc)
             ),
             resolve: context =>
             {
                 var query = dbContext.ClinicalTrials.Include(t => t.Experiments).Include(t => t.Drugs);
+                
+                // Filters
                 var status = context.GetArgument<string>("status");
                 var phase = context.GetArgument<string>("phase");
                 var startDate = context.GetArgument<DateTime?>("startDate");
@@ -1070,6 +1073,30 @@ public class ClinicalTrialQuery : ObjectGraphType
 
                 if (endDate.HasValue)
                     query = query.Where(t => t.EndDate <= endDate.Value);
+
+                // Sorting Logic
+                var sortBy = context.GetArgument<string>("sortBy");
+                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
+
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    if (sortOrder == "desc")
+                    {
+                        if (sortBy == "name")
+                            query = query.OrderByDescending(t => t.Name);
+                        else if (sortBy == "startDate")
+                            query = query.OrderByDescending(t => t.StartDate);
+                        // Add other sorting conditions here based on fields
+                    }
+                    else
+                    {
+                        if (sortBy == "name")
+                            query = query.OrderBy(t => t.Name);
+                        else if (sortBy == "startDate")
+                            query = query.OrderBy(t => t.StartDate);
+                        // Add other sorting conditions here based on fields
+                    }
+                }
 
                 return query.ToList();
             }
@@ -1091,66 +1118,234 @@ public class ClinicalTrialQuery : ObjectGraphType
             }
         );
 
-        // Query for Drugs used in Clinical Trials with filtering
+        // Query for Drugs used in Clinical Trials with filtering and sorting
         Field<ListGraphType<DrugType>>(
             "drugsByTrial",
             arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" }
+                new QueryArgument<IntGraphType> { Name = "trialId" },
+                new QueryArgument<StringGraphType> { Name = "sortBy" },
+                new QueryArgument<StringGraphType> { Name = "sortOrder" }
             ),
             resolve: context =>
             {
                 var trialId = context.GetArgument<int>("trialId");
-                return dbContext.Drugs
-                    .Where(d => d.ClinicalTrialId == trialId)
-                    .ToList();
+                var query = dbContext.Drugs.Where(d => d.ClinicalTrialId == trialId);
+
+                // Sorting Logic for Drugs
+                var sortBy = context.GetArgument<string>("sortBy");
+                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
+
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    if (sortOrder == "desc")
+                    {
+                        if (sortBy == "name")
+                            query = query.OrderByDescending(d => d.Name);
+                        else if (sortBy == "approvalStatus")
+                            query = query.OrderByDescending(d => d.ApprovalStatus);
+                    }
+                    else
+                    {
+                        if (sortBy == "name")
+                            query = query.OrderBy(d => d.Name);
+                        else if (sortBy == "approvalStatus")
+                            query = query.OrderBy(d => d.ApprovalStatus);
+                    }
+                }
+
+                return query.ToList();
             }
         );
 
-        // Query for all Experiments filtered by ClinicalTrialId
+        // Query for Experiments filtered by ClinicalTrialId with sorting
         Field<ListGraphType<ExperimentType>>(
             "experimentsByTrial",
             arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" }
+                new QueryArgument<IntGraphType> { Name = "trialId" },
+                new QueryArgument<StringGraphType> { Name = "sortBy" },
+                new QueryArgument<StringGraphType> { Name = "sortOrder" }
             ),
             resolve: context =>
             {
                 var trialId = context.GetArgument<int>("trialId");
-                return dbContext.Experiments
-                    .Where(e => e.ClinicalTrialId == trialId)
-                    .ToList();
+                var query = dbContext.Experiments.Where(e => e.ClinicalTrialId == trialId);
+
+                // Sorting Logic for Experiments
+                var sortBy = context.GetArgument<string>("sortBy");
+                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
+
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    if (sortOrder == "desc")
+                    {
+                        if (sortBy == "species")
+                            query = query.OrderByDescending(e => e.Species);
+                        else if (sortBy == "subjectCount")
+                            query = query.OrderByDescending(e => e.SubjectCount);
+                    }
+                    else
+                    {
+                        if (sortBy == "species")
+                            query = query.OrderBy(e => e.Species);
+                        else if (sortBy == "subjectCount")
+                            query = query.OrderBy(e => e.SubjectCount);
+                    }
+                }
+
+                return query.ToList();
             }
         );
 
-        // Query for Banned Components filtered by ClinicalTrialId
+        // Query for Banned Components filtered by ClinicalTrialId with sorting
         Field<ListGraphType<BannedComponentType>>(
             "bannerComponentsByTrial",
             arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" }
+                new QueryArgument<IntGraphType> { Name = "trialId" },
+                new QueryArgument<StringGraphType> { Name = "sortBy" },
+                new QueryArgument<StringGraphType> { Name = "sortOrder" }
             ),
             resolve: context =>
             {
                 var trialId = context.GetArgument<int>("trialId");
-                return dbContext.BannedComponents
-                    .Where(b => b.ClinicalTrialId == trialId)
-                    .ToList();
+                var query = dbContext.BannedComponents.Where(b => b.ClinicalTrialId == trialId);
+
+                // Sorting Logic for Banned Components
+                var sortBy = context.GetArgument<string>("sortBy");
+                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
+
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    if (sortOrder == "desc")
+                    {
+                        if (sortBy == "name")
+                            query = query.OrderByDescending(b => b.Name);
+                        else if (sortBy == "actionDate")
+                            query = query.OrderByDescending(b => b.ActionDate);
+                    }
+                    else
+                    {
+                        if (sortBy == "name")
+                            query = query.OrderBy(b => b.Name);
+                        else if (sortBy == "actionDate")
+                            query = query.OrderBy(b => b.ActionDate);
+                    }
+                }
+
+                return query.ToList();
             }
         );
 
-        // Query for Adverse Effects filtered by ClinicalTrialId
+        // Query for Adverse Effects filtered by ClinicalTrialId with sorting
         Field<ListGraphType<AdverseEffectType>>(
             "adverseEffectsByTrial",
             arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" }
+                new QueryArgument<IntGraphType> { Name = "trialId" },
+                new QueryArgument<StringGraphType> { Name = "sortBy" },
+                new QueryArgument<StringGraphType> { Name = "sortOrder" }
             ),
             resolve: context =>
             {
                 var trialId = context.GetArgument<int>("trialId");
-                return dbContext.AdverseEffects
-                    .Where(a => a.ClinicalTrialId == trialId)
-                    .ToList();
+                var query = dbContext.AdverseEffects.Where(a => a.ClinicalTrialId == trialId);
+
+                // Sorting Logic for Adverse Effects
+                var sortBy = context.GetArgument<string>("sortBy");
+                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
+
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    if (sortOrder == "desc")
+                    {
+                        if (sortBy == "effect")
+                            query = query.OrderByDescending(a => a.Effect);
+                        else if (sortBy == "severity")
+                            query = query.OrderByDescending(a => a.Severity);
+                    }
+                    else
+                    {
+                        if (sortBy == "effect")
+                            query = query.OrderBy(a => a.Effect);
+                        else if (sortBy == "severity")
+                            query = query.OrderBy(a => a.Severity);
+                    }
+                }
+
+                return query.ToList();
             }
         );
     }
 }
 
+
+{
+  trials(status: "Completed", phase: "Phase 3") {
+    id
+    name
+    phase
+    experiments {
+      id
+      species
+      subjectCount
+      subjectType
+    }
+    drugs {
+      id
+      name
+      approvalStatus
+    }
+  }
+}
+
+
+{
+  drugsByTrial(trialId: 1) {
+    id
+    name
+    approvalStatus
+    clinicalTrial {
+      name
+      phase
+    }
+  }
+}
+
+
+{
+  experimentsByTrial(trialId: 1) {
+    id
+    species
+    subjectCount
+    subjectType
+    clinicalTrial {
+      name
+    }
+  }
+  adverseEffectsByTrial(trialId: 1) {
+    id
+    effect
+    severity
+  }
+  bannerComponentsByTrial(trialId: 1) {
+    id
+    name
+    reasonForBan
+  }
+}
+
+{
+  trials(startDate: "2020-01-01", endDate: "2023-01-01") {
+    id
+    name
+    bannerComponents {
+      id
+      name
+      reasonForBan
+    }
+    adverseEffects {
+      id
+      effect
+      severity
+    }
+  }
+}
 
