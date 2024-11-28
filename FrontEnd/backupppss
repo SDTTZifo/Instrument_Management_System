@@ -1346,6 +1346,63 @@ public class ClinicalTrialQuery : ObjectGraphType
       effect
       severity
     }
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using OfficeOpenXml;
+using Newtonsoft.Json;
+
+class Program
+{
+    static void Main()
+    {
+        string filePath = @"path_to_your_excel_file.xlsx";
+        string jsonOutputPath = @"path_to_output_json.json";
+
+        var excelData = new Dictionary<string, List<Dictionary<string, string>>>();
+
+        // Load the Excel file
+        using (var package = new ExcelPackage(new FileInfo(filePath)))
+        {
+            foreach (var sheet in package.Workbook.Worksheets)
+            {
+                var sheetData = new List<Dictionary<string, string>>();
+
+                // Loop through each cell in the worksheet
+                for (int row = sheet.Dimension.Start.Row; row <= sheet.Dimension.End.Row; row++)
+                {
+                    for (int col = sheet.Dimension.Start.Column; col <= sheet.Dimension.End.Column; col++)
+                    {
+                        var cell = sheet.Cells[row, col];
+                        if (cell != null)
+                        {
+                            var cellData = new Dictionary<string, string>
+                            {
+                                { "CellAddress", cell.Address },
+                                { "CellValue", cell.Text },
+                                { "CellFormula", cell.Formula }
+                            };
+                            sheetData.Add(cellData);
+                        }
+                    }
+                }
+
+                excelData[sheet.Name] = sheetData;
+            }
+        }
+
+        // Serialize the data to JSON
+        string json = JsonConvert.SerializeObject(excelData, Formatting.Indented);
+
+        // Write the JSON to a file
+        File.WriteAllText(jsonOutputPath, json);
+
+        Console.WriteLine("JSON file created successfully.");
+    }
+}
+
   }
 }
 
