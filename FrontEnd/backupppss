@@ -1406,3 +1406,234 @@ class Program
   }
 }
 
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+using OfficeOpenXml;
+
+class Program
+{
+    static void Main()
+    {
+        string jsonOutputPath = @"path_to_output_json.json";
+        var excelData = new Dictionary<string, List<object>>();
+
+        using (var package = new ExcelPackage(new FileInfo(@"path_to_excel_file.xlsx")))
+        {
+            var worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first sheet
+
+            // Reading Sequence Details
+            var sequenceDetails = new List<Dictionary<string, string>>();
+            int row = 1;
+            while (true)
+            {
+                string cellValue = worksheet.Cells[row, 1].Text;
+                if (cellValue == "Integration results")
+                {
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(cellValue))
+                {
+                    var parameter = new Dictionary<string, string>
+                    {
+                        { cellValue.TrimEnd(':'), worksheet.Cells[row, 2].Text }
+                    };
+                    sequenceDetails.Add(parameter);
+                }
+
+                cellValue = worksheet.Cells[row, 4].Text;
+                if (!string.IsNullOrWhiteSpace(cellValue))
+                {
+                    var parameter = new Dictionary<string, string>
+                    {
+                        { cellValue.TrimEnd(':'), worksheet.Cells[row, 5].Text }
+                    };
+                    sequenceDetails.Add(parameter);
+                }
+                row++;
+            }
+            excelData["Sheet1"] = new List<object> { new { SequenceDetails = sequenceDetails } };
+
+            // Reading Integration Results
+            var integrationResults = new List<Dictionary<string, string>>();
+            row++; // Skip the "Integration results" row
+            var headers = new List<string>();
+            int col = 1;
+            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+            {
+                headers.Add(worksheet.Cells[row, col].Text);
+                col++;
+            }
+            row++; // Move to the first row of data
+
+            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
+            {
+                var rowData = new Dictionary<string, string>();
+                for (int i = 0; i < headers.Count; i++)
+                {
+                    rowData[headers[i]] = worksheet.Cells[row, i + 1].Text;
+                }
+                integrationResults.Add(rowData);
+                row++;
+            }
+
+            var tableData = new { IntegrationResults = integrationResults };
+            excelData["Sheet1"].Add(tableData);
+        }
+
+        // Serialize the data to JSON
+        string json = JsonConvert.SerializeObject(excelData, Formatting.Indented);
+
+        // Write the JSON to a file
+        File.WriteAllText(jsonOutputPath, json);
+
+        Console.WriteLine("JSON file created successfully.");
+    }
+}
+
+
+chat 2---------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+using OfficeOpenXml;
+
+class Program
+{
+    static void Main()
+    {
+        string jsonOutputPath = @"path_to_output_json.json";
+        var excelData = new Dictionary<string, List<object>>();
+
+        using (var package = new ExcelPackage(new FileInfo(@"path_to_excel_file.xlsx")))
+        {
+            var worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first sheet
+
+            // Reading Sequence Details
+            var sequenceDetails = new List<Dictionary<string, string>>();
+            int row = 1;
+            while (true)
+            {
+                string cellValue = worksheet.Cells[row, 1].Text;
+                if (cellValue == "Integration results")
+                {
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(cellValue) && cellValue.Contains(":"))
+                {
+                    var parameter = cellValue.Split(':')[0].Trim();
+                    var value = FindValueForParameter(worksheet, row, 1);
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        var parameterPair = new Dictionary<string, string>
+                        {
+                            { parameter, value }
+                        };
+                        sequenceDetails.Add(parameterPair);
+                    }
+                }
+
+                cellValue = worksheet.Cells[row, 4].Text;
+                if (!string.IsNullOrWhiteSpace(cellValue) && cellValue.Contains(":"))
+                {
+                    var parameter = cellValue.Split(':')[0].Trim();
+                    var value = FindValueForParameter(worksheet, row, 4);
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        var parameterPair = new Dictionary<string, string>
+                        {
+                            { parameter, value }
+                        };
+                        sequenceDetails.Add(parameterPair);
+                    }
+                }
+                row++;
+            }
+            excelData["Sheet1"] = new List<object> { new { SequenceDetails = sequenceDetails } };
+
+            // Reading Integration Results
+            var integrationResults = new List<Dictionary<string, string>>();
+            row++; // Skip the "Integration results" row
+            var headers = new List<string>();
+            int col = 1;
+            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+            {
+                headers.Add(worksheet.Cells[row, col].Text);
+                col++;
+            }
+            row++; // Move to the first row of data
+
+            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
+            {
+                var rowData = new Dictionary<string, string>();
+                for (int i = 0; i < headers.Count; i++)
+                {
+                    rowData[headers[i]] = worksheet.Cells[row, i + 1].Text;
+                }
+                integrationResults.Add(rowData);
+                row++;
+            }
+
+            var tableData = new { IntegrationResults = integrationResults };
+            excelData["Sheet1"].Add(tableData);
+        }
+
+        // Serialize the data to JSON
+        string json = JsonConvert.SerializeObject(excelData, Formatting.Indented);
+
+        // Write the JSON to a file
+        File.WriteAllText(jsonOutputPath, json);
+
+        Console.WriteLine("JSON file created successfully.");
+    }
+
+    static string FindValueForParameter(ExcelWorksheet worksheet, int startRow, int startColumn)
+    {
+        string value = null;
+        int row = startRow;
+        int col = startColumn + 1;
+
+        // Check the immediate next cell first
+        if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+        {
+            return worksheet.Cells[row, col].Text;
+        }
+
+        // Check subsequent cells in the same row
+        while (col < worksheet.Dimension.End.Column)
+        {
+            if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+            {
+                value = worksheet.Cells[row, col].Text;
+                break;
+            }
+            col++;
+        }
+
+        // If value is not found in the same row, check the next row
+        if (string.IsNullOrEmpty(value))
+        {
+            row++;
+            col = startColumn;
+            while (row <= worksheet.Dimension.End.Row)
+            {
+                if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+                {
+                    value = worksheet.Cells[row, col].Text;
+                    break;
+                }
+                row++;
+            }
+        }
+
+        return value;
+    }
+}
+
