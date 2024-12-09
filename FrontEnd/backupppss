@@ -1,1639 +1,543 @@
-Clinical Trial Data Management with GraphQL
-
-Project Overview:
-	
-	This is a GraphQL demo application designed to highlight the capabilities of GraphQL in handling complex queries and nested querying. It is not a web application but a GraphQL API application. The focus will be on performing advanced queries through the GraphQL API console.
-	
-	Clinical trials generate vast amounts of data crucial for developing new drugs and treatments. Managing this data, ranging from patient information to genetic experiments and trial outcomes—requires efficient tools. A GraphQL-based Clinical Trial Data Management system streamlines the querying, analysis, and management of these datasets, facilitating insight generation, progress tracking, and regulatory compliance.
-	
-Example:
-	
-	A pharmaceutical company is advancing a new cancer drug, "ABC," targeting genetic markers for breast cancer. As the drug moves into human trials, the company needs to manage and analyze extensive data, including patient records, genetic information, trial results, and regulatory statuses. This application provides the necessary infrastructure to handle these complexities efficiently.
-	
-Use cases:
-
-	1. Trial Status and Progress Tracking
-		○ Objective: Track the current status and progress of ongoing and completed clinical trials.
-		○ Details:
-			§ Experiment Information:
-				□ Type: Genetic experiments.
-				□ Subjects: Humans, animals or birds.
-			§ Status:
-				□ Trials can be categorized as Ongoing, Completed, Approved, Published to Market, or Terminated/Banned.
-				□ Detailed status reporting, including milestones like Phase I/II/III completion, Regulatory Approval, and Market Launch.
-				
-	2. Genetic Experiment Details
-		○ Objective: Retrieve detailed information on genetic experiments conducted during clinical trials.
-		○ Details:
-			§ Experiment Information:
-				□ Species: Animals (e.g., rodents, primates), humans.
-				□ Genetic Focus: Identifying genetic markers associated with adverse reactions.
-				□ Subject Information: Number of subjects, species, and genetic modifications.
-	
-	3. Drug Approval and Market Release Status
-		○ Objective: Query the approval status and market release information for drugs tested in clinical trials.
-		○ Details:
-			§ Approval Information:
-				□ Drugs can be in various stages: Approved, Awaiting Approval, Banned, or Published to Market.
-				□ Status updates can include reasons for rejection or banning (e.g., adverse effects, insufficient efficacy).
-				
-	4. Adverse Effects and Safety Monitoring
-		○ Objective: Monitor and query data on adverse effects reported during and after clinical trials.
-		○ Details:
-			§ Experiment Information:
-				□ Subjects: Human, animal, bird trials.
-				□ Adverse Effects: Reported side effects, severity, frequency.
-				□ Safety Measures: Monitoring protocols, risk assessments.
-				
-	5. Banned Components and Regulatory Compliance
-		○ Objective: Query information on components or drugs banned during trials due to regulatory or safety concerns.
-		○ Details:
-			§ Banned Components:
-				□ Reasons for Ban: Adverse effects, environmental impact, ethical concerns.
-				□ Regulatory Actions: Recall, market withdrawal, legal implications.
-
-
-
-// Models/Trial.cs
-public class Trial
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Status { get; set; }
-    public string Phase { get; set; }
-    public string ExperimentType { get; set; }
-    public List<Experiment> Experiments { get; set; } = new List<Experiment>();
-    public List<AdverseEffect> AdverseEffects { get; set; } = new List<AdverseEffect>();
-    public Drug Drug { get; set; }
-}
-
-// Models/Experiment.cs
-public class Experiment
-{
-    public int Id { get; set; }
-    public string Species { get; set; }
-    public string GeneticFocus { get; set; }
-    public int NumberOfSubjects { get; set; }
-    public bool HasGeneticModification { get; set; }
-    public int TrialId { get; set; }
-    public Trial Trial { get; set; }
-}
-
-// Models/Drug.cs
-public class Drug
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string ApprovalStatus { get; set; }
-    public string MarketReleaseStatus { get; set; }
-    public string BanReason { get; set; }
-}
-
-// Models/AdverseEffect.cs
-public class AdverseEffect
-{
-    public int Id { get; set; }
-    public string Effect { get; set; }
-    public string Severity { get; set; }
-    public string Frequency { get; set; }
-    public int TrialId { get; set; }
-    public Trial Trial { get; set; }
-}
-
-
-// GraphQL/Types/TrialType.cs
-public class TrialType : ObjectGraphType<Trial>
-{
-    public TrialType()
-    {
-        Field(x => x.Id);
-        Field(x => x.Name);
-        Field(x => x.Status);
-        Field(x => x.Phase);
-        Field(x => x.ExperimentType);
-        Field<ListGraphType<ExperimentType>>("experiments");
-        Field<ListGraphType<AdverseEffectType>>("adverseEffects");
-        Field<DrugType>("drug");
-    }
-}
-
-// GraphQL/Types/ExperimentType.cs
-public class ExperimentType : ObjectGraphType<Experiment>
-{
-    public ExperimentType()
-    {
-        Field(x => x.Id);
-        Field(x => x.Species);
-        Field(x => x.GeneticFocus);
-        Field(x => x.NumberOfSubjects);
-        Field(x => x.HasGeneticModification);
-    }
-}
-
-// Similarly create DrugType and AdverseEffectType
-public class DrugType : ObjectGraphType<Drug>
-    {
-        public DrugType()
-        {
-            Field(x => x.Id).Description("The ID of the drug.");
-            Field(x => x.Name).Description("The name of the drug.");
-            Field(x => x.ApprovalStatus).Description("The approval status of the drug (e.g., Approved, Awaiting Approval, Banned).");
-            Field(x => x.MarketReleaseStatus, nullable: true).Description("The market release status of the drug, if available.");
-            Field(x => x.BanReason, nullable: true).Description("The reason for banning the drug, if applicable.");
-        }
-    }
-
-public class AdverseEffectType : ObjectGraphType<AdverseEffect>
-    {
-        public AdverseEffectType()
-        {
-            Field(x => x.Id).Description("The ID of the adverse effect.");
-            Field(x => x.Effect).Description("The description of the adverse effect.");
-            Field(x => x.Severity).Description("The severity level of the adverse effect (e.g., Mild, Moderate, Severe).");
-            Field(x => x.Frequency).Description("The frequency of occurrence of the adverse effect.");
-        }
-    }
-
-// GraphQL/Types/BannerComponentType.cs
-using GraphQL.Types;
-using ClinicalTrialsGraphQL.Models;
-
-namespace ClinicalTrialsGraphQL.GraphQL.Types
-{
-    public class BannerComponentType : ObjectGraphType<BannerComponent>
-    {
-        public BannerComponentType()
-        {
-            Field(x => x.Id).Description("The ID of the banned component.");
-            Field(x => x.ComponentName).Description("The name of the banned component.");
-            Field(x => x.BanReason).Description("The reason for banning the component (e.g., Adverse effects, ethical concerns).");
-            Field(x => x.RegulatoryAction).Description("The regulatory action taken against the banned component (e.g., Recall, Market Withdrawal).");
-        }
-    }
-}
-
-
-
-// GraphQL/Queries/ClinicalTrialsQuery.cs
-public class ClinicalTrialsQuery : ObjectGraphType
-{
-    public ClinicalTrialsQuery(ClinicalTrialsDbContext dbContext)
-    {
-        Field<ListGraphType<TrialType>>(
-            "trials",
-            resolve: context => dbContext.Trials.Include(t => t.Experiments).Include(t => t.AdverseEffects).Include(t => t.Drug)
-        );
-
-        Field<ListGraphType<ExperimentType>>(
-            "experiments",
-            resolve: context => dbContext.Experiments
-        );
-
-        Field<ListGraphType<DrugType>>(
-            "drugs",
-            resolve: context => dbContext.Drugs
-        );
-
-        Field<ListGraphType<AdverseEffectType>>(
-            "adverseEffects",
-            resolve: context => dbContext.AdverseEffects
-        );
-    }
-}
-
-// GraphQL/Queries/ClinicalTrialQuery.cs
-using GraphQL.Types;
-using ClinicalTrialsGraphQL.Data;
-using ClinicalTrialsGraphQL.Models;
-
-namespace ClinicalTrialsGraphQL.GraphQL.Queries
-{
-    public class ClinicalTrialQuery : ObjectGraphType
-    {
-        public ClinicalTrialQuery(ClinicalTrialsDbContext dbContext)
-        {
-            Field<ListGraphType<TrialType>>(
-                "trials",
-                resolve: context => dbContext.Trials.ToList()
-            );
-
-            // Query to fetch Banner Components by Trial ID
-            Field<ListGraphType<BannerComponentType>>(
-                "bannerComponents",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "trialId" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int?>("trialId");
-                    return trialId == null
-                        ? dbContext.BannerComponents.ToList()
-                        : dbContext.BannerComponents.Where(b => b.TrialId == trialId).ToList();
-                }
-            );
-        }
-    }
-}
-
-
-// GraphQL/ClinicalTrialsSchema.cs
-public class ClinicalTrialsSchema : Schema
-{
-    public ClinicalTrialsSchema(IServiceProvider provider) : base(provider)
-    {
-        Query = provider.GetRequiredService<ClinicalTrialsQuery>();
-    }
-}
-
-// GraphQL/Schema/ClinicalTrialSchema.cs
-using GraphQL.Types;
-using ClinicalTrialsGraphQL.GraphQL.Queries;
-
-namespace ClinicalTrialsGraphQL.GraphQL
-{
-    public class ClinicalTrialSchema : Schema
-    {
-        public ClinicalTrialSchema(ClinicalTrialQuery query)
-        {
-            Query = query;
-        }
-    }
-}
-
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddDbContext<ClinicalTrialsDbContext>(options =>
-        options.UseSqlServer("Your_Connection_String"));
-
-    services.AddScoped<ClinicalTrialsQuery>();
-    services.AddScoped<TrialType>();
-    services.AddScoped<ExperimentType>();
-    services.AddScoped<DrugType>();
-    services.AddScoped<AdverseEffectType>();
-    services.AddScoped<ISchema, ClinicalTrialsSchema>();
-
-    services.AddGraphQL(options =>
-    {
-        options.EnableMetrics = false;
-    })
-    .AddSystemTextJson()
-    .AddGraphTypes(ServiceLifetime.Scoped);
-}
-public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-{
-    if (env.IsDevelopment())
-    {
-        app.UseDeveloperExceptionPage();
-    }
-
-    app.UseRouting();
-
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.MapGraphQL("/graphql");
-    });
-
-    app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
-    {
-        Path = "/playground"
-    });
-}
-
-
-query {
-    trials(where: { status: "Ongoing", phase: "Phase III" }) {
-        name
-        status
-        phase
-        experiments {
-            experimentType
-            species
-        }
-    }
-}
-
-
-query {
-    experiments(where: { geneticFocus: "Markers for Adverse Reactions" }) {
-        species
-        numberOfSubjects
-        hasGeneticModification
-        trial {
-            name
-            status
-        }
-    }
-}
-
-query {
-    drugs(where: { approvalStatus: "Approved" }) {
-        name
-        approvalStatus
-        marketReleaseStatus
-    }
-}
-
-query {
-    adverseEffects(where: { severity: "High" }) {
-        effect
-        frequency
-        trial {
-            name
-            status
-        }
-    }
-}
-
-query {
-    drugs(where: { banReason: { neq: null } }) {
-        name
-        banReason
-    }
-}
-
-
-
-
-// GraphQL/Queries/ClinicalTrialQuery.cs
-using GraphQL.Types;
-using ClinicalTrialsGraphQL.Data;
-using ClinicalTrialsGraphQL.Models;
-using System.Linq;
-
-namespace ClinicalTrialsGraphQL.GraphQL.Queries
-{
-    public class ClinicalTrialQuery : ObjectGraphType
-    {
-        public ClinicalTrialQuery(ClinicalTrialsDbContext dbContext)
-        {
-            // Query for all Trials
-            Field<ListGraphType<TrialType>>(
-                "trials",
-                resolve: context => dbContext.Trials.ToList()
-            );
-
-            // Query for a single Trial by ID
-            Field<TrialType>(
-                "trial",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "id" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int>("id");
-                    return dbContext.Trials.FirstOrDefault(t => t.Id == trialId);
-                }
-            );
-
-            // Query for all Banner Components
-            Field<ListGraphType<BannerComponentType>>(
-                "bannerComponents",
-                resolve: context => dbContext.BannerComponents.ToList()
-            );
-
-            // Query for Banner Components filtered by Trial ID
-            Field<ListGraphType<BannerComponentType>>(
-                "bannerComponentsByTrial",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "trialId" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int?>("trialId");
-                    return trialId == null
-                        ? dbContext.BannerComponents.ToList()
-                        : dbContext.BannerComponents.Where(b => b.TrialId == trialId).ToList();
-                }
-            );
-
-            // Query for all Experiments
-            Field<ListGraphType<ExperimentType>>(
-                "experiments",
-                resolve: context => dbContext.Experiments.ToList()
-            );
-
-            // Query for a single Experiment by ID
-            Field<ExperimentType>(
-                "experiment",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "id" }
-                ),
-                resolve: context =>
-                {
-                    var experimentId = context.GetArgument<int>("id");
-                    return dbContext.Experiments.FirstOrDefault(e => e.Id == experimentId);
-                }
-            );
-
-            // Query for all Drugs
-            Field<ListGraphType<DrugType>>(
-                "drugs",
-                resolve: context => dbContext.Drugs.ToList()
-            );
-
-            // Query for a single Drug by ID
-            Field<DrugType>(
-                "drug",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "id" }
-                ),
-                resolve: context =>
-                {
-                    var drugId = context.GetArgument<int>("id");
-                    return dbContext.Drugs.FirstOrDefault(d => d.Id == drugId);
-                }
-            );
-
-            // Query for all Adverse Effects
-            Field<ListGraphType<AdverseEffectType>>(
-                "adverseEffects",
-                resolve: context => dbContext.AdverseEffects.ToList()
-            );
-
-            // Query for Adverse Effects by Trial ID
-            Field<ListGraphType<AdverseEffectType>>(
-                "adverseEffectsByTrial",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "trialId" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int?>("trialId");
-                    return trialId == null
-                        ? dbContext.AdverseEffects.ToList()
-                        : dbContext.AdverseEffects.Where(a => a.TrialId == trialId).ToList();
-                }
-            );
-        }
-    }
-}
-
-// GraphQL/Schema/ClinicalTrialSchema.cs
-using GraphQL.Types;
-using ClinicalTrialsGraphQL.GraphQL.Queries;
-
-namespace ClinicalTrialsGraphQL.GraphQL
-{
-    public class ClinicalTrialSchema : Schema
-    {
-        public ClinicalTrialSchema(ClinicalTrialQuery query)
-        {
-            Query = query;  // This sets the root query for GraphQL to `ClinicalTrialQuery`
-        }
-    }
-}
-
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddScoped<ClinicalTrialQuery>();  // Register the query
-builder.Services.AddScoped<ISchema, ClinicalTrialSchema>();  // Register the schema
-
-builder.Services.AddGraphQL(options =>
-{
-    options.EnableMetrics = false;  // Optional: Disable metrics for simplicity
-})
-.AddSystemTextJson()  // Add support for JSON serialization
-.AddGraphTypes(ServiceLifetime.Scoped);  // Add GraphQL types (register all GraphQL types in scoped lifetime)
-
-var app = builder.Build();
-
-// Configure the GraphQL endpoint
-app.UseGraphQL<ISchema>();
-
-app.Run();
-
-public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-{
-    app.UseRouting();
-
-    // Enable GraphQL Playground UI for testing
-    app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
-    {
-        Path = "/graphql",  // Path to access GraphQL playground
-        QueryPath = "/graphql"
-    });
-
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.MapGraphQL();  // Map the GraphQL endpoint to /graphql
-    });
-}
-
-var app = builder.Build();
-
-app.UseRouting();
-
-// Enable GraphQL Playground UI for testing
-app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
-{
-    Path = "/graphql",  // Path to access GraphQL playground
-    QueryPath = "/graphql"
-});
-
-app.MapGraphQL();  // Map the GraphQL endpoint to /graphql
-
-app.Run();
-
-
-{
-  trials {
-    id
-    name
-    status
-    phase
-    experimentType
-    drug {
-      id
-      name
-    }
-  }
-}
-
-{
-  bannerComponents {
-    id
-    componentName
-    banReason
-    regulatoryAction
-  }
-}
-
-{
-  experiment(id: 1) {
-    id
-    species
-    geneticFocus
-    numberOfSubjects
-    hasGeneticModification
-  }
-}
-
-
-
-using GraphQL.Types;
-using ClinicalTrialsGraphQL.Models;  // Assuming you have models like Trial, Experiment, etc.
-
-namespace ClinicalTrialsGraphQL.GraphQL.Types
-{
-    // TrialType for querying clinical trials
-    public class TrialType : ObjectGraphType<Trial>
-    {
-        public TrialType()
-        {
-            Field(x => x.Id);
-            Field(x => x.Name);
-            Field(x => x.Status);
-            Field(x => x.Phase);
-            Field(x => x.ExperimentType);
-            Field<ListGraphType<ExperimentType>>("experiments");
-            Field<ListGraphType<AdverseEffectType>>("adverseEffects");
-            Field<DrugType>("drug");
-            Field<ListGraphType<BannerComponentType>>("bannerComponents");
-        }
-    }
-
-    // ExperimentType for querying experiment data
-    public class ExperimentType : ObjectGraphType<Experiment>
-    {
-        public ExperimentType()
-        {
-            Field(x => x.Id);
-            Field(x => x.Species);
-            Field(x => x.GeneticFocus);
-            Field(x => x.NumberOfSubjects);
-            Field(x => x.HasGeneticModification);
-        }
-    }
-
-    // DrugType for querying drug information
-    public class DrugType : ObjectGraphType<Drug>
-    {
-        public DrugType()
-        {
-            Field(x => x.Id);
-            Field(x => x.Name);
-            Field(x => x.Status);
-            Field(x => x.ApprovalStatus);
-        }
-    }
-
-    // AdverseEffectType for querying adverse effects from clinical trials
-    public class AdverseEffectType : ObjectGraphType<AdverseEffect>
-    {
-        public AdverseEffectType()
-        {
-            Field(x => x.Id);
-            Field(x => x.SideEffect);
-            Field(x => x.Severity);
-            Field(x => x.Frequency);
-        }
-    }
-
-    // BannerComponentType for querying banned components and regulatory actions
-    public class BannerComponentType : ObjectGraphType<BannerComponent>
-    {
-        public BannerComponentType()
-        {
-            Field(x => x.Id);
-            Field(x => x.ComponentName);
-            Field(x => x.BanReason);
-            Field(x => x.RegulatoryAction);
-        }
-    }
-}
-
-
-
-using GraphQL.Types;
-using GraphQL_Presentation_Demo.Models;
-
-namespace GraphQL_Presentation_Demo.GraphQL
-{
-    public class TrialType : ObjectGraphType<ClinicalTrial>
-    {
-        public TrialType()
-        {
-            Field(x => x.Id);
-            Field(x => x.Name);
-            Field(x => x.CurrentStatus);
-            Field(x => x.Phase);
-            Field(x => x.StartDate);
-            Field(x => x.EndDate);
-            Field<ListGraphType<ExperimentType>>("experiments");
-            Field<ListGraphType<AdverseEffectType>>("adverseEffects");
-            Field<DrugType>("drug");
-        }
-    }
-
-    public class ExperimentType : ObjectGraphType<Experiment>
-    {
-        public ExperimentType()
-        {
-            Field(x => x.Id);
-            Field(x => x.Species);
-            Field(x => x.GeneticFocus);
-            Field(x => x.SubjectCount);
-            Field(x => x.Type);
-            Field(x => x.ClinicalTrialId);
-            Field(x => x.SubjectType);
-        }
-    }
-
-    public class DrugType : ObjectGraphType<Drug>
-    {
-        public DrugType()
-        {
-            Field(x => x.Id).Description("The ID of the drug.");
-            Field(x => x.Name).Description("The name of the drug.");
-            Field(x => x.ApprovalStatus).Description("The approval status of the drug (e.g., Approved, Awaiting Approval, Banned).");
-            Field(x => x.MarketStatus, nullable: true).Description("The market release status of the drug, if available.");
-            Field(x => x.ClinicalTrialId);
-        }
-    }
-    public class BannedComponentType : ObjectGraphType<BannedComponent>
-    {
-        public BannedComponentType()
-        {
-            Field(x => x.Id).Description("The ID of the banned component.");
-            Field(x => x.Name).Description("The name of the banned component.");
-            Field(x => x.ReasonForBan).Description("The reason for banning the component (e.g., Adverse effects, ethical concerns).");
-            Field(x => x.RegulatoryActions).Description("The regulatory action taken against the banned component (e.g., Recall, Market Withdrawal).");
-            Field(x => x.ClinicalTrialId);
-        }
-    }
-
-    public class AdverseEffectType : ObjectGraphType<AdverseEffect>
-    {
-        public AdverseEffectType()
-        {
-            Field(x => x.Id).Description("The ID of the adverse effect.");
-            Field(x => x.Effect).Description("The description of the adverse effect.");
-            Field(x => x.Severity).Description("The severity level of the adverse effect (e.g., Mild, Moderate, Severe).");
-            Field(x => x.Frequency).Description("The frequency of occurrence of the adverse effect.");
-            Field(x => x.ClinicalTrialId);
-        }
-    }
-
-
-
-}
-
-
-using GraphQL;
-using GraphQL.Types;
-
-namespace GraphQL_Presentation_Demo.GraphQL
-{
-    public class ClinicalTrialsSchema : Schema
-    {
-        public ClinicalTrialsSchema(IServiceProvider provider) : base(provider)
-        {
-            Query = provider.GetRequiredService<ClinicalTrialQuery>();
-        }
-    }
-}
-
-
-using GraphQL.Types;
-using GraphQL_Presentation_Demo.GraphQL;
-using GraphQL_Presentation_Demo.Models;
-using GraphQL;
-
-namespace GraphQL_Presentation_Demo.GraphQL
-{
-    public class ClinicalTrialQuery : ObjectGraphType
-    {
-        public ClinicalTrialQuery(SdttContext dbContext)
-        {
-            // Query for all Trials
-            Field<ListGraphType<TrialType>>(
-                "trials",
-                resolve: context => dbContext.ClinicalTrials.ToList()
-            );
-
-            // Query for a single Trial by ID
-            Field<TrialType>(
-                "trial",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "id" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int>("id");
-                    return dbContext.ClinicalTrials.FirstOrDefault(t => t.Id == trialId);
-                }
-            );
-
-            // Query for all Banner Components
-            Field<ListGraphType<BannedComponentType>>(
-                "bannerComponents",
-                resolve: context => dbContext.BannedComponents.ToList()
-            );
-
-            // Query for Banner Components filtered by Trial ID
-            Field<ListGraphType<BannedComponentType>>(
-                "bannerComponentsByTrial",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "trialId" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int?>("trialId");
-                    return trialId == null
-                        ? dbContext.BannedComponents.ToList()
-                        : dbContext.BannedComponents.Where(b => b.ClinicalTrialId == trialId).ToList();
-                }
-            );
-
-            // Query for all Experiments
-            Field<ListGraphType<ExperimentType>>(
-                "experiments",
-                resolve: context => dbContext.Experiments.ToList()
-            );
-
-            // Query for a single Experiment by ID
-            Field<ExperimentType>(
-                "experiment",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "id" }
-                ),
-                resolve: context =>
-                {
-                    var experimentId = context.GetArgument<int>("id");
-                    return dbContext.Experiments.FirstOrDefault(e => e.Id == experimentId);
-                }
-            );
-
-            // Query for all Drugs
-            Field<ListGraphType<DrugType>>(
-                "drugs",
-                resolve: context => dbContext.Drugs.ToList()
-            );
-
-            // Query for a single Drug by ID
-            Field<DrugType>(
-                "drug",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "id" }
-                ),
-                resolve: context =>
-                {
-                    var drugId = context.GetArgument<int>("id");
-                    return dbContext.Drugs.FirstOrDefault(d => d.Id == drugId);
-                }
-            );
-
-            // Query for all Adverse Effects
-            Field<ListGraphType<AdverseEffectType>>(
-                "adverseEffects",
-                resolve: context => dbContext.AdverseEffects.ToList()
-            );
-
-            // Query for Adverse Effects by Trial ID
-            Field<ListGraphType<AdverseEffectType>>(
-                "adverseEffectsByTrial",
-                arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "trialId" }
-                ),
-                resolve: context =>
-                {
-                    var trialId = context.GetArgument<int?>("trialId");
-                    return trialId == null
-                        ? dbContext.AdverseEffects.ToList()
-                        : dbContext.AdverseEffects.Where(a => a.ClinicalTrialId == trialId).ToList();
-                }
-            );
-        }
-    }
-}
-
-databasemodels
-
-namespace GraphQL_Presentation_Demo.Models;
-
-public partial class ClinicalTrial
-{
-    public int Id { get; set; }
-
-    public string? Name { get; set; }
-
-    public string? Phase { get; set; }
-
-    public DateTime? StartDate { get; set; }
-
-    public DateTime? EndDate { get; set; }
-
-    public string? CurrentStatus { get; set; }
-
-    public virtual ICollection<AdverseEffect> AdverseEffects { get; set; } = new List<AdverseEffect>();
-
-    public virtual ICollection<BannedComponent> BannedComponents { get; set; } = new List<BannedComponent>();
-
-    public virtual ICollection<Drug> Drugs { get; set; } = new List<Drug>();
-
-    public virtual ICollection<Experiment> Experiments { get; set; } = new List<Experiment>();
-
-    public virtual ICollection<SafetyMeasure> SafetyMeasures { get; set; } = new List<SafetyMeasure>();
-}
-
-using System;
-using System.Collections.Generic;
-
-namespace GraphQL_Presentation_Demo.Models;
-
-public partial class Drug
-{
-    public int Id { get; set; }
-
-    public string? Name { get; set; }
-
-    public string? ApprovalStatus { get; set; }
-
-    public string? MarketStatus { get; set; }
-
-    public int? ClinicalTrialId { get; set; }
-
-    public virtual ClinicalTrial? ClinicalTrial { get; set; }
-}
-
-using System;
-using System.Collections.Generic;
-
-namespace GraphQL_Presentation_Demo.Models;
-
-public partial class Experiment
-{
-    public int Id { get; set; }
-
-    public int? ClinicalTrialId { get; set; }
-
-    public string? Type { get; set; }
-
-    public string? Species { get; set; }
-
-    public string? GeneticFocus { get; set; }
-
-    public string? SubjectType { get; set; }
-
-    public int? SubjectCount { get; set; }
-
-    public virtual ClinicalTrial? ClinicalTrial { get; set; }
-}
-
-using System;
-using System.Collections.Generic;
-
-namespace GraphQL_Presentation_Demo.Models;
-
-public partial class BannedComponent
-{
-    public int Id { get; set; }
-
-    public string? Name { get; set; }
-
-    public int? ClinicalTrialId { get; set; }
-
-    public string? ReasonForBan { get; set; }
-
-    public string? RegulatoryActions { get; set; }
-
-    public DateTime? ActionDate { get; set; }
-
-    public virtual ClinicalTrial? ClinicalTrial { get; set; }
-}
-
-using System;
-using System.Collections.Generic;
-
-namespace GraphQL_Presentation_Demo.Models;
-
-public partial class AdverseEffect
-{
-    public int Id { get; set; }
-
-    public int? ClinicalTrialId { get; set; }
-
-    public string? Effect { get; set; }
-
-    public string? Severity { get; set; }
-
-    public string? Frequency { get; set; }
-
-    public string? SubjectType { get; set; }
-
-    public virtual ClinicalTrial? ClinicalTrial { get; set; }
-}
-
-
-Chat::::::::::::::::::::::::::::::::::::::
-
-public class TrialType : ObjectGraphType<ClinicalTrial>
-{
-    public TrialType()
-    {
-        Field(x => x.Id);
-        Field(x => x.Name);
-        Field(x => x.CurrentStatus);
-        Field(x => x.Phase);
-        Field(x => x.StartDate);
-        Field(x => x.EndDate);
-
-        // Resolving related experiments and drugs
-        Field<ListGraphType<ExperimentType>>(
-            "experiments",
-            resolve: context => context.Source.Experiments
-        );
-
-        Field<ListGraphType<AdverseEffectType>>(
-            "adverseEffects",
-            resolve: context => context.Source.AdverseEffects
-        );
-
-        Field<ListGraphType<BannedComponentType>>(
-            "bannerComponents",
-            resolve: context => context.Source.BannedComponents
-        );
-
-        Field<ListGraphType<DrugType>>(
-            "drugs",
-            resolve: context => context.Source.Drugs
-        );
-    }
-}
-
-
-public class ClinicalTrialQuery : ObjectGraphType
-{
-    public ClinicalTrialQuery(SdttContext dbContext)
-    {
-        // Query for all Trials
-        Field<ListGraphType<TrialType>>(
-            "trials",
-            resolve: context => dbContext.ClinicalTrials.Include(t => t.Experiments).Include(t => t.Drugs).ToList() // Include related entities
-        );
-
-        // Query for a single Trial by ID
-        Field<TrialType>(
-            "trial",
-            arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "id" }
-            ),
-            resolve: context =>
-            {
-                var trialId = context.GetArgument<int>("id");
-                return dbContext.ClinicalTrials
-                    .Include(t => t.Experiments)
-                    .Include(t => t.Drugs)
-                    .FirstOrDefault(t => t.Id == trialId);
-            }
-        );
-
-        // Other queries for banner components, adverse effects, etc.
-        Field<ListGraphType<BannedComponentType>>(
-            "bannerComponents",
-            resolve: context => dbContext.BannedComponents.ToList()
-        );
-    }
-}
-
-public class ClinicalTrialQuery : ObjectGraphType
-{
-    public ClinicalTrialQuery(SdttContext dbContext)
-    {
-        // Query for all Trials with complex filters and sorting
-        Field<ListGraphType<TrialType>>(
-            "trials",
-            arguments: new QueryArguments(
-                new QueryArgument<StringGraphType> { Name = "status" },
-                new QueryArgument<StringGraphType> { Name = "phase" },
-                new QueryArgument<DateTimeGraphType> { Name = "startDate" },
-                new QueryArgument<DateTimeGraphType> { Name = "endDate" },
-                new QueryArgument<StringGraphType> { Name = "sortBy" },   // New: field to sort by
-                new QueryArgument<StringGraphType> { Name = "sortOrder" }  // New: order (asc/desc)
-            ),
-            resolve: context =>
-            {
-                var query = dbContext.ClinicalTrials.Include(t => t.Experiments).Include(t => t.Drugs);
-                
-                // Filters
-                var status = context.GetArgument<string>("status");
-                var phase = context.GetArgument<string>("phase");
-                var startDate = context.GetArgument<DateTime?>("startDate");
-                var endDate = context.GetArgument<DateTime?>("endDate");
-
-                if (!string.IsNullOrEmpty(status))
-                    query = query.Where(t => t.CurrentStatus == status);
-
-                if (!string.IsNullOrEmpty(phase))
-                    query = query.Where(t => t.Phase == phase);
-
-                if (startDate.HasValue)
-                    query = query.Where(t => t.StartDate >= startDate.Value);
-
-                if (endDate.HasValue)
-                    query = query.Where(t => t.EndDate <= endDate.Value);
-
-                // Sorting Logic
-                var sortBy = context.GetArgument<string>("sortBy");
-                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
-
-                if (!string.IsNullOrEmpty(sortBy))
-                {
-                    if (sortOrder == "desc")
-                    {
-                        if (sortBy == "name")
-                            query = query.OrderByDescending(t => t.Name);
-                        else if (sortBy == "startDate")
-                            query = query.OrderByDescending(t => t.StartDate);
-                        // Add other sorting conditions here based on fields
-                    }
-                    else
-                    {
-                        if (sortBy == "name")
-                            query = query.OrderBy(t => t.Name);
-                        else if (sortBy == "startDate")
-                            query = query.OrderBy(t => t.StartDate);
-                        // Add other sorting conditions here based on fields
-                    }
-                }
-
-                return query.ToList();
-            }
-        );
-
-        // Query for a single Trial by ID
-        Field<TrialType>(
-            "trial",
-            arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "id" }
-            ),
-            resolve: context =>
-            {
-                var trialId = context.GetArgument<int>("id");
-                return dbContext.ClinicalTrials
-                    .Include(t => t.Experiments)
-                    .Include(t => t.Drugs)
-                    .FirstOrDefault(t => t.Id == trialId);
-            }
-        );
-
-        // Query for Drugs used in Clinical Trials with filtering and sorting
-        Field<ListGraphType<DrugType>>(
-            "drugsByTrial",
-            arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" },
-                new QueryArgument<StringGraphType> { Name = "sortBy" },
-                new QueryArgument<StringGraphType> { Name = "sortOrder" }
-            ),
-            resolve: context =>
-            {
-                var trialId = context.GetArgument<int>("trialId");
-                var query = dbContext.Drugs.Where(d => d.ClinicalTrialId == trialId);
-
-                // Sorting Logic for Drugs
-                var sortBy = context.GetArgument<string>("sortBy");
-                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
-
-                if (!string.IsNullOrEmpty(sortBy))
-                {
-                    if (sortOrder == "desc")
-                    {
-                        if (sortBy == "name")
-                            query = query.OrderByDescending(d => d.Name);
-                        else if (sortBy == "approvalStatus")
-                            query = query.OrderByDescending(d => d.ApprovalStatus);
-                    }
-                    else
-                    {
-                        if (sortBy == "name")
-                            query = query.OrderBy(d => d.Name);
-                        else if (sortBy == "approvalStatus")
-                            query = query.OrderBy(d => d.ApprovalStatus);
-                    }
-                }
-
-                return query.ToList();
-            }
-        );
-
-        // Query for Experiments filtered by ClinicalTrialId with sorting
-        Field<ListGraphType<ExperimentType>>(
-            "experimentsByTrial",
-            arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" },
-                new QueryArgument<StringGraphType> { Name = "sortBy" },
-                new QueryArgument<StringGraphType> { Name = "sortOrder" }
-            ),
-            resolve: context =>
-            {
-                var trialId = context.GetArgument<int>("trialId");
-                var query = dbContext.Experiments.Where(e => e.ClinicalTrialId == trialId);
-
-                // Sorting Logic for Experiments
-                var sortBy = context.GetArgument<string>("sortBy");
-                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
-
-                if (!string.IsNullOrEmpty(sortBy))
-                {
-                    if (sortOrder == "desc")
-                    {
-                        if (sortBy == "species")
-                            query = query.OrderByDescending(e => e.Species);
-                        else if (sortBy == "subjectCount")
-                            query = query.OrderByDescending(e => e.SubjectCount);
-                    }
-                    else
-                    {
-                        if (sortBy == "species")
-                            query = query.OrderBy(e => e.Species);
-                        else if (sortBy == "subjectCount")
-                            query = query.OrderBy(e => e.SubjectCount);
-                    }
-                }
-
-                return query.ToList();
-            }
-        );
-
-        // Query for Banned Components filtered by ClinicalTrialId with sorting
-        Field<ListGraphType<BannedComponentType>>(
-            "bannerComponentsByTrial",
-            arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" },
-                new QueryArgument<StringGraphType> { Name = "sortBy" },
-                new QueryArgument<StringGraphType> { Name = "sortOrder" }
-            ),
-            resolve: context =>
-            {
-                var trialId = context.GetArgument<int>("trialId");
-                var query = dbContext.BannedComponents.Where(b => b.ClinicalTrialId == trialId);
-
-                // Sorting Logic for Banned Components
-                var sortBy = context.GetArgument<string>("sortBy");
-                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
-
-                if (!string.IsNullOrEmpty(sortBy))
-                {
-                    if (sortOrder == "desc")
-                    {
-                        if (sortBy == "name")
-                            query = query.OrderByDescending(b => b.Name);
-                        else if (sortBy == "actionDate")
-                            query = query.OrderByDescending(b => b.ActionDate);
-                    }
-                    else
-                    {
-                        if (sortBy == "name")
-                            query = query.OrderBy(b => b.Name);
-                        else if (sortBy == "actionDate")
-                            query = query.OrderBy(b => b.ActionDate);
-                    }
-                }
-
-                return query.ToList();
-            }
-        );
-
-        // Query for Adverse Effects filtered by ClinicalTrialId with sorting
-        Field<ListGraphType<AdverseEffectType>>(
-            "adverseEffectsByTrial",
-            arguments: new QueryArguments(
-                new QueryArgument<IntGraphType> { Name = "trialId" },
-                new QueryArgument<StringGraphType> { Name = "sortBy" },
-                new QueryArgument<StringGraphType> { Name = "sortOrder" }
-            ),
-            resolve: context =>
-            {
-                var trialId = context.GetArgument<int>("trialId");
-                var query = dbContext.AdverseEffects.Where(a => a.ClinicalTrialId == trialId);
-
-                // Sorting Logic for Adverse Effects
-                var sortBy = context.GetArgument<string>("sortBy");
-                var sortOrder = context.GetArgument<string>("sortOrder")?.ToLower();
-
-                if (!string.IsNullOrEmpty(sortBy))
-                {
-                    if (sortOrder == "desc")
-                    {
-                        if (sortBy == "effect")
-                            query = query.OrderByDescending(a => a.Effect);
-                        else if (sortBy == "severity")
-                            query = query.OrderByDescending(a => a.Severity);
-                    }
-                    else
-                    {
-                        if (sortBy == "effect")
-                            query = query.OrderBy(a => a.Effect);
-                        else if (sortBy == "severity")
-                            query = query.OrderBy(a => a.Severity);
-                    }
-                }
-
-                return query.ToList();
-            }
-        );
-    }
-}
-
-
-{
-  trials(status: "Completed", phase: "Phase 3") {
-    id
-    name
-    phase
-    experiments {
-      id
-      species
-      subjectCount
-      subjectType
-    }
-    drugs {
-      id
-      name
-      approvalStatus
-    }
-  }
-}
-
-
-{
-  drugsByTrial(trialId: 1) {
-    id
-    name
-    approvalStatus
-    clinicalTrial {
-      name
-      phase
-    }
-  }
-}
-
-
-{
-  experimentsByTrial(trialId: 1) {
-    id
-    species
-    subjectCount
-    subjectType
-    clinicalTrial {
-      name
-    }
-  }
-  adverseEffectsByTrial(trialId: 1) {
-    id
-    effect
-    severity
-  }
-  bannerComponentsByTrial(trialId: 1) {
-    id
-    name
-    reasonForBan
-  }
-}
-
-{
-  trials(startDate: "2020-01-01", endDate: "2023-01-01") {
-    id
-    name
-    bannerComponents {
-      id
-      name
-      reasonForBan
-    }
-    adverseEffects {
-      id
-      effect
-      severity
-    }
-
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using OfficeOpenXml;
-using Newtonsoft.Json;
-
-class Program
-{
-    static void Main()
-    {
-        string filePath = @"path_to_your_excel_file.xlsx";
-        string jsonOutputPath = @"path_to_output_json.json";
-
-        var excelData = new Dictionary<string, List<Dictionary<string, string>>>();
-
-        // Load the Excel file
-        using (var package = new ExcelPackage(new FileInfo(filePath)))
-        {
-            foreach (var sheet in package.Workbook.Worksheets)
-            {
-                var sheetData = new List<Dictionary<string, string>>();
-
-                // Loop through each cell in the worksheet
-                for (int row = sheet.Dimension.Start.Row; row <= sheet.Dimension.End.Row; row++)
-                {
-                    for (int col = sheet.Dimension.Start.Column; col <= sheet.Dimension.End.Column; col++)
-                    {
-                        var cell = sheet.Cells[row, col];
-                        if (cell != null)
-                        {
-                            var cellData = new Dictionary<string, string>
-                            {
-                                { "CellAddress", cell.Address },
-                                { "CellValue", cell.Text },
-                                { "CellFormula", cell.Formula }
-                            };
-                            sheetData.Add(cellData);
-                        }
-                    }
-                }
-
-                excelData[sheet.Name] = sheetData;
-            }
-        }
-
-        // Serialize the data to JSON
-        string json = JsonConvert.SerializeObject(excelData, Formatting.Indented);
-
-        // Write the JSON to a file
-        File.WriteAllText(jsonOutputPath, json);
-
-        Console.WriteLine("JSON file created successfully.");
-    }
-}
-
-  }
-}
-
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
-using OfficeOpenXml;
-
-class Program
-{
-    static void Main()
-    {
-        string jsonOutputPath = @"path_to_output_json.json";
-        var excelData = new Dictionary<string, List<object>>();
-
-        using (var package = new ExcelPackage(new FileInfo(@"path_to_excel_file.xlsx")))
-        {
-            var worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first sheet
-
-            // Reading Sequence Details
-            var sequenceDetails = new List<Dictionary<string, string>>();
-            int row = 1;
-            while (true)
-            {
-                string cellValue = worksheet.Cells[row, 1].Text;
-                if (cellValue == "Integration results")
-                {
-                    break;
-                }
-
-                if (!string.IsNullOrWhiteSpace(cellValue))
-                {
-                    var parameter = new Dictionary<string, string>
-                    {
-                        { cellValue.TrimEnd(':'), worksheet.Cells[row, 2].Text }
-                    };
-                    sequenceDetails.Add(parameter);
-                }
-
-                cellValue = worksheet.Cells[row, 4].Text;
-                if (!string.IsNullOrWhiteSpace(cellValue))
-                {
-                    var parameter = new Dictionary<string, string>
-                    {
-                        { cellValue.TrimEnd(':'), worksheet.Cells[row, 5].Text }
-                    };
-                    sequenceDetails.Add(parameter);
-                }
-                row++;
-            }
-            excelData["Sheet1"] = new List<object> { new { SequenceDetails = sequenceDetails } };
-
-            // Reading Integration Results
-            var integrationResults = new List<Dictionary<string, string>>();
-            row++; // Skip the "Integration results" row
-            var headers = new List<string>();
-            int col = 1;
-            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
-            {
-                headers.Add(worksheet.Cells[row, col].Text);
-                col++;
-            }
-            row++; // Move to the first row of data
-
-            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
-            {
-                var rowData = new Dictionary<string, string>();
-                for (int i = 0; i < headers.Count; i++)
-                {
-                    rowData[headers[i]] = worksheet.Cells[row, i + 1].Text;
-                }
-                integrationResults.Add(rowData);
-                row++;
-            }
-
-            var tableData = new { IntegrationResults = integrationResults };
-            excelData["Sheet1"].Add(tableData);
-        }
-
-        // Serialize the data to JSON
-        string json = JsonConvert.SerializeObject(excelData, Formatting.Indented);
-
-        // Write the JSON to a file
-        File.WriteAllText(jsonOutputPath, json);
-
-        Console.WriteLine("JSON file created successfully.");
-    }
-}
-
-
-chat 2---------------------------------------
-
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
-using OfficeOpenXml;
-
-class Program
-{
-    static void Main()
-    {
-        string jsonOutputPath = @"path_to_output_json.json";
-        var excelData = new Dictionary<string, List<object>>();
-
-        using (var package = new ExcelPackage(new FileInfo(@"path_to_excel_file.xlsx")))
-        {
-            var worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first sheet
-
-            // Reading Sequence Details
-            var sequenceDetails = new List<Dictionary<string, string>>();
-            int row = 1;
-            while (true)
-            {
-                string cellValue = worksheet.Cells[row, 1].Text;
-                if (cellValue == "Integration results")
-                {
-                    break;
-                }
-
-                if (!string.IsNullOrWhiteSpace(cellValue) && cellValue.Contains(":"))
-                {
-                    var parameter = cellValue.Split(':')[0].Trim();
-                    var value = FindValueForParameter(worksheet, row, 1);
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        var parameterPair = new Dictionary<string, string>
-                        {
-                            { parameter, value }
-                        };
-                        sequenceDetails.Add(parameterPair);
-                    }
-                }
-
-                cellValue = worksheet.Cells[row, 4].Text;
-                if (!string.IsNullOrWhiteSpace(cellValue) && cellValue.Contains(":"))
-                {
-                    var parameter = cellValue.Split(':')[0].Trim();
-                    var value = FindValueForParameter(worksheet, row, 4);
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        var parameterPair = new Dictionary<string, string>
-                        {
-                            { parameter, value }
-                        };
-                        sequenceDetails.Add(parameterPair);
-                    }
-                }
-                row++;
-            }
-            excelData["Sheet1"] = new List<object> { new { SequenceDetails = sequenceDetails } };
-
-            // Reading Integration Results
-            var integrationResults = new List<Dictionary<string, string>>();
-            row++; // Skip the "Integration results" row
-            var headers = new List<string>();
-            int col = 1;
-            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
-            {
-                headers.Add(worksheet.Cells[row, col].Text);
-                col++;
-            }
-            row++; // Move to the first row of data
-
-            while (!string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
-            {
-                var rowData = new Dictionary<string, string>();
-                for (int i = 0; i < headers.Count; i++)
-                {
-                    rowData[headers[i]] = worksheet.Cells[row, i + 1].Text;
-                }
-                integrationResults.Add(rowData);
-                row++;
-            }
-
-            var tableData = new { IntegrationResults = integrationResults };
-            excelData["Sheet1"].Add(tableData);
-        }
-
-        // Serialize the data to JSON
-        string json = JsonConvert.SerializeObject(excelData, Formatting.Indented);
-
-        // Write the JSON to a file
-        File.WriteAllText(jsonOutputPath, json);
-
-        Console.WriteLine("JSON file created successfully.");
-    }
-
-    static string FindValueForParameter(ExcelWorksheet worksheet, int startRow, int startColumn)
-    {
-        string value = null;
-        int row = startRow;
-        int col = startColumn + 1;
-
-        // Check the immediate next cell first
-        if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
-        {
-            return worksheet.Cells[row, col].Text;
-        }
-
-        // Check subsequent cells in the same row
-        while (col < worksheet.Dimension.End.Column)
-        {
-            if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
-            {
-                value = worksheet.Cells[row, col].Text;
-                break;
-            }
-            col++;
-        }
-
-        // If value is not found in the same row, check the next row
-        if (string.IsNullOrEmpty(value))
-        {
-            row++;
-            col = startColumn;
-            while (row <= worksheet.Dimension.End.Row)
-            {
-                if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
-                {
-                    value = worksheet.Cells[row, col].Text;
-                    break;
-                }
-                row++;
-            }
-        }
-
-        return value;
-    }
-}
+For your coaching center application, here's a roadmap to achieve the project using Django, PostgreSQL, and efficient front-end technologies.
+
+Major Work Breakdown:
+User Roles & Permissions:
+
+Trainers: Manage sessions, create and evaluate assessments.
+Trainees: Track courses, take assessments, request re-evaluation, view results.
+Coordinators: Facilitate assessments, manage trainees’ access to courses, track and evaluate assessments.
+Admins: Manage all users, permissions, and data.
+Session Tracking:
+
+Track sessions, attendance, completion status, and assessment submissions.
+Assessment Management:
+
+Create assessments (question sets), assign assessments to trainees, facilitate automatic marking, and store results.
+Notifications:
+
+Real-time notifications via Django channels or background task processing (e.g., Celery) for session updates, assessment results, etc.
+Data Management:
+
+Store and process course materials, assessments, answers, and evaluation results.
+Admin and coordinator can oversee the progress of the trainees.
+Re-evaluation Request:
+
+Trainees should be able to request re-evaluations for their assessments, with corresponding notifications to trainers.
+Two Approaches for Building the Scalable Application:
+1. Monolithic Architecture with Django + PostgreSQL (Simpler & Direct Approach)
+Backend:
+
+Django's built-in authentication and authorization system to manage different roles and permissions.
+Models: Create models for Courses, Sessions, Assessments, Questions, Trainees, Trainers, Results, Notifications, etc. Use Django’s ORM with PostgreSQL for scalable data management.
+Admin Panel: Leverage Django's admin for managing users, courses, and assessments.
+REST API: Use Django REST Framework (DRF) to build APIs if you need to make the system extensible (mobile app, other services).
+Celery: Use Celery with Redis to handle background tasks like notifications, session tracking, evaluation, etc.
+Channels: For real-time notifications between users (e.g., when a trainee finishes the assessment).
+Frontend:
+
+Use Bootstrap 5 for responsive design and simplicity.
+JavaScript (Vanilla or libraries like jQuery) for dynamic content like assessment submission, session status updates.
+Frontend Framework: Optionally, use React.js or Vue.js for better UI interactivity, such as real-time updates and a more dynamic user interface (use Django Rest Framework for API backend integration).
+Deployment:
+
+Use Docker to containerize the app for scalability.
+NGINX for serving static files and reverse proxy.
+Gunicorn or uWSGI as the WSGI server for serving Django.
+PostgreSQL database for scalability with Django ORM.
+Use AWS/Heroku for hosting, or DigitalOcean for self-hosting, with scalability configurations.
+2. Microservices Architecture with Django + PostgreSQL + React/Vue.js (More Scalable, Complex Approach)
+Backend:
+
+Split backend services into microservices based on functionality:
+User Management Service: Manages authentication, roles, permissions (Django + PostgreSQL).
+Course Management Service: Manages courses, sessions, and topics.
+Assessment Service: Manages question creation, answer evaluation, result generation.
+Notification Service: Responsible for sending out emails, push notifications, etc.
+Use Django Rest Framework (DRF) to build APIs for each service.
+Celery for background tasks (notification sending, processing assessments, etc.).
+Docker for containerizing each microservice for scalability and easier deployment.
+Use Redis or RabbitMQ for inter-service communication and task queuing.
+Frontend:
+
+React.js or Vue.js for a dynamic, single-page application (SPA) with state management using Redux (for React) or Vuex (for Vue.js).
+Real-time updates can be achieved using WebSockets or Django Channels.
+Axios or Fetch API for communicating with the backend API services.
+Deployment:
+
+Use Kubernetes for orchestrating microservices and scaling resources as needed.
+Each microservice can scale independently based on demand.
+Use NGINX as a reverse proxy to manage traffic to the different microservices.
+AWS ECS (Elastic Container Service) or Google Kubernetes Engine (GKE) for cloud hosting and service orchestration.
+PostgreSQL for database, ensuring data consistency across services.
+Implement API Gateway (e.g., Kong, AWS API Gateway) to handle routing, rate-limiting, and security between the services.
+Additional Considerations:
+Authentication: Use JWT (JSON Web Tokens) for stateless authentication (for both monolithic and microservices architectures).
+Authorization: Implement role-based access control (RBAC) to manage permissions for trainers, trainees, coordinators, and admins.
+Testing: Use pytest and Django’s test framework for testing models, views, and APIs.
+Security: Use Django's built-in security features like CSRF protection, HTTPS, password hashing, and Django’s ORM to prevent SQL injection.
+Caching: Use Redis or Memcached for caching frequently accessed data and reducing database load.
+Recommendation:
+For a faster, simpler setup, go with the Monolithic Approach. It leverages Django's built-in tools and should scale well with optimizations.
+For a highly scalable, enterprise-level solution, opt for the Microservices Architecture, which offers more flexibility and the ability to scale individual services based on load.
+
+
+
+--------------------------------------------------------------------------------------------------
+
+
+Features:
+All functionality (backend and API) resides within one Django project, separated into apps for modularity.
+Frontend (React/Angular) connects to the Django REST API.
+Roadmap:
+Define Django Apps:
 
+Users: Manage authentication, role-based access.
+Courses: Handle courses, topics, and progress tracking.
+Assessments: Manage question banks, assessments, and results.
+Notifications: Handle notifications using Django Channels.
+Admin Panel: Extend Django’s admin for user and course management.
+Setup Frontend:
+
+Use React/Angular to build role-based dashboards (Trainer, Trainee, Coordinator, Admin).
+Communicate with the backend via REST APIs for data fetching and updates.
+Implement Features:
+
+Notifications: Use Django Channels for real-time WebSocket updates (e.g., trainee assessment completion).
+Automatic Grading: Write background tasks using Celery for processing large assessments.
+Progress Tracking: Use Django ORM to store and calculate session/course progress dynamically.
+Deploy:
+
+Use PostgreSQL with proper indexing to ensure fast queries.
+Optimize APIs for large-scale data access using pagination and caching.
+Approach 2: Microservices-Based Architecture
+This architecture splits the system into independent microservices, making it more scalable and resilient.
+
+Features:
+Each core module (e.g., Users, Courses, Assessments) becomes a separate service.
+Services communicate via APIs (REST or GraphQL).
+Roadmap:
+Define Services:
+
+User Management Service: Authentication, roles, and permissions.
+Course Management Service: Handle courses, topics, and tracking.
+Assessment Service: Manage assessments, grading, and results.
+Notification Service: A dedicated service for sending real-time notifications.
+Use Django for Services:
+
+Each service is a Django project with its own database schema.
+Use Django REST Framework for APIs.
+Frontend:
+
+Single frontend (React/Angular) integrates data from multiple microservices via APIs.
+Use GraphQL for a unified query layer if needed.
+Service Communication:
+
+Use an API Gateway (e.g., Kong or AWS API Gateway) to route requests to appropriate services.
+Use Celery and Redis for background tasks and inter-service communication.
+Real-Time Notifications:
+
+Use Django Channels or a dedicated WebSocket service for real-time notifications.
+Deploy:
+
+Use Kubernetes for orchestrating microservices.
+Monitor services with tools like Prometheus and Grafana.
+
+Tech Stack Comparison
+Feature	Approach 1: Modular Monolithic	Approach 2: Microservices
+Scalability	Easier to start but harder to scale later.	Highly scalable; services are independent.
+Maintenance	Single codebase; simpler for small teams.	Each service is independent; requires more effort to maintain.
+Development Speed	Faster to develop initially.	Slower initially but allows independent team progress.
+Real-Time Features	Supported via Django Channels.	Supported via dedicated microservices or Django Channels.
+
+
+Recommendation
+Start with Modular Monolithic if you’re a small team or unsure of initial requirements. You can always refactor into microservices later.
+Choose Microservices if you expect the application to grow quickly or if you have a larger team to manage independent services.
+Suggested Enhancements
+Analytics: Add a module for tracking trainee performance and trainer efficiency.
+File Uploads: Use AWS S3 or a similar service to store and serve resources.
+Role Customization: Allow admins to create custom roles and permissions dynamically.
+Offline Support: Use Progressive Web App (PWA) features for offline capabilities.
+
+
+
+----------------------------------------------------------------------------------------------------------
+
+
+Approach 1: Django + React with Microservices Architecture
+Tech Stack:
+
+Backend:
+
+
+Django (Python)
+Django REST Framework
+PostgreSQL
+Celery (for background tasks)
+Redis (message broker)
+Docker (containerization)
+
+
+Frontend:
+
+
+React.js
+Redux for state management
+Tailwind CSS
+Material-UI/Shadcn UI components
+
+
+Additional Technologies:
+
+
+Django Channels (for real-time notifications)
+JWT Authentication
+Elasticsearch (for advanced search)
+Nginx (web server)
+Gunicorn (WSGI HTTP Server)
+
+System Architecture:
+
+User Management Microservice
+
+
+Handle registration, authentication
+Role-based access control (RBAC)
+Profile management
+
+
+Course Management Microservice
+
+
+Course creation
+Batch management
+Enrollment tracking
+Course progress monitoring
+
+
+Assessment Management Microservice
+
+
+Question bank management
+Assessment creation
+Automatic grading system
+Result processing
+
+
+Notification Service
+
+
+Real-time event-driven notifications
+Email/SMS/In-app notifications
+WebSocket integration
+
+Key Features Implementation:
+
+Implement comprehensive permission matrix
+Use Django signals for tracking state changes
+Implement background task processing for heavy computations
+Create modular, reusable components in React
+Implement caching strategies
+
+Approach 2: Django Monolithic with HTMX and Alpine.js
+Tech Stack:
+
+Backend:
+
+
+Django
+Django ORM
+PostgreSQL
+Celery
+Whitenoise (static file serving)
+
+
+Frontend:
+
+
+HTMX (for dynamic interactions)
+Alpine.js (lightweight JavaScript)
+Django Templates
+Bootstrap/Tailwind CSS
+
+
+Additional Technologies:
+
+
+Django Allauth (authentication)
+Django Crispy Forms
+Django Debug Toolbar
+Mailgun/SendGrid (email services)
+
+System Architecture:
+
+Monolithic Django Application
+
+
+Integrated apps for different domains
+Use Django apps for modular development
+Implement class-based views
+Utilize Django's built-in authentication system
+
+
+Enhanced Frontend Interactions
+
+
+HTMX for partial page updates
+Alpine.js for reactive components
+Minimal JavaScript footprint
+Server-side rendering with dynamic updates
+
+Key Features Implementation:
+
+Leverage Django forms for validation
+Use Django signals for tracking changes
+Implement custom middleware for notifications
+Create reusable template tags
+Use Django REST Framework for API endpoints if needed
+
+Comparative Analysis:
+Approach 1 Strengths:
+
+High scalability
+Microservices architecture
+Better for complex, large-scale applications
+Modern frontend experience
+Easier horizontal scaling
+
+Approach 1 Challenges:
+
+Higher complexity
+More infrastructure management
+Increased development time
+
+Approach 2 Strengths:
+
+Faster development
+Lower infrastructure complexity
+Easier maintenance
+Good for smaller to medium-sized applications
+Less JavaScript overhead
+
+Approach 2 Challenges:
+
+Limited scalability
+Less interactive frontend
+Potential performance limitations for very complex interactions
+
+Recommended Additional Features:
+
+Analytics Dashboard
+Payment Integration
+Advanced Reporting
+Integration with Learning Management Systems
+Mobile Responsive Design
+
+Recommendation:
+
+For a startup or small to medium coaching center: Choose Approach 2
+For a large, multi-location coaching enterprise: Choose Approach 1
+
+Next Steps:
+
+Create detailed database schema
+Design comprehensive user stories
+Set up development environment
+Start with core user management module
+Implement incremental feature development
+
+
+
+--------------------------------------------------------------------------------------------------------------
+
+
+coaching_management_system/
+│
+├── backend/
+│   ├── config/                 # Django project configuration
+│   │   ├── __init__.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── wsgi.py
+│   │
+│   ├── apps/
+│   │   ├── users/              # User management microservice
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── permissions.py
+│   │   │
+│   │   ├── courses/            # Course management microservice
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── signals.py
+│   │   │
+│   │   ├── assessments/        # Assessment management microservice
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── services.py
+│   │   │
+│   │   └── notifications/      # Notification service
+│   │       ├── models.py
+│   │       ├── consumers.py
+│   │       └── tasks.py
+│   │
+│   ├── requirements.txt
+│   └── manage.py
+│
+├── frontend/                   # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── redux/
+│   │
+│   ├── package.json
+│   └── Dockerfile
+│
+├── docker-compose.yml
+├── nginx/                      # Nginx configuration
+│   └── default.conf
+│
+└── README.md
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+coaching_center/
+├── coaching_center/            # Main Django project folder (settings, URLs)
+│   ├── __init__.py
+│   ├── settings.py             # Settings for the entire project (database, apps, middleware)
+│   ├── urls.py                 # Project-wide URL routing
+│   ├── asgi.py                 # ASGI setup for real-time features (WebSocket)
+│   ├── wsgi.py                 # WSGI setup for traditional requests
+│   └── settings/
+│       ├── __init__.py
+│       ├── base.py             # Base settings
+│       ├── production.py       # Production-specific settings
+│       └── development.py      # Development-specific settings
+├── users/                      # App for user management (authentication, roles)
+│   ├── __init__.py
+│   ├── models.py               # Custom user model, roles, permissions
+│   ├── views.py                # User registration, login, role management views
+│   ├── serializers.py          # Serializers for user-related APIs
+│   ├── urls.py                 # URLs for user management
+│   ├── tests.py                # Tests for user features
+│   └── admin.py                # Custom admin panel for user management
+├── courses/                    # App for managing courses, sessions, and topics
+│   ├── __init__.py
+│   ├── models.py               # Course and session models
+│   ├── views.py                # Views for displaying courses, topics, sessions
+│   ├── serializers.py          # Serializers for course-related APIs
+│   ├── urls.py                 # URLs for courses
+│   ├── tests.py                # Tests for courses
+│   └── admin.py                # Custom admin panel for course management
+├── assessments/                # App for assessments, questions, results
+│   ├── __init__.py
+│   ├── models.py               # Models for assessments, questions, answers
+│   ├── views.py                # Views for displaying assessments, results
+│   ├── serializers.py          # Serializers for assessments-related APIs
+│   ├── urls.py                 # URLs for assessments
+│   ├── tasks.py                # Celery tasks for grading
+│   └── admin.py                # Custom admin panel for assessments
+├── notifications/              # App for handling notifications
+│   ├── __init__.py
+│   ├── models.py               # Notification models (types, statuses)
+│   ├── views.py                # Views to manage notifications (optional)
+│   ├── consumers.py            # WebSocket consumers for real-time notifications
+│   ├── tasks.py                # Celery tasks for sending notifications
+│   ├── serializers.py          # Serializers for notifications
+│   ├── urls.py                 # URLs for notifications
+│   └── admin.py                # Custom admin panel for notifications
+├── templates/                  # HTML templates (Django views)
+│   ├── base.html               # Base HTML template
+│   ├── dashboard.html          # Trainer, coordinator, and trainee dashboards
+│   └── ...
+├── static/                     # Static assets (CSS, JS, images)
+│   └── ...
+├── media/                      # User-uploaded files (assessment files, reports)
+│   └── ...
+├── manage.py                   # Django management commands (runs server, migrations)
+└── requirements.txt            # Project dependencies
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Explanation of Folder Structure:
+coaching_center/: This is the main project folder. It contains the overall project settings, ASGI and WSGI configurations, and settings specific to different environments (development, production).
+
+users/: Handles all user-related features. This includes:
+
+Models for user registration, custom user model, role management (Admin, Trainee, Trainer, Coordinator).
+Views for authentication and user management.
+Serializers for converting user data to/from JSON when using the API.
+URLs to define routes for user-related views (login, register).
+courses/: Handles course-related functionality such as:
+
+Models to store course details, session data, and tracking progress.
+Views to render course-related content for the dashboard.
+Serializers to send/receive course data through the API.
+assessments/: Manages assessments, including:
+
+Models for assessment, questions, answers, and result tracking.
+Views to display assessments for trainees and handle grading for trainers.
+Celery Tasks for background processing of assessment grading.
+Serializers to expose assessment data through the API.
+notifications/: Handles real-time notifications and background tasks:
+
+WebSocket Consumers for implementing real-time notifications using Django Channels.
+Models for storing notification data (e.g., read/unread status).
+Tasks for sending notifications in the background (via Celery).
+Serializers to serialize notification data if exposed through an API.
+templates/: Stores the HTML templates for Django views. This could include:
+
+Base templates and layout files.
+Dashboard templates for each role (Admin, Trainer, Trainee, Coordinator).
+static/: Stores static files like CSS, JavaScript, and images.
+
+media/: Stores user-uploaded content (e.g., assessment files, reports).
+
+Process for Achieving Approach 1
+1. Define Models and Database Structure
+User Model: Define user roles (Trainer, Trainee, Coordinator, Admin) using Django’s built-in User model or a custom model if necessary. Use Django Groups for role-based permissions.
+Courses: Create models for storing course names, topics, and sessions. Link courses to trainers and trainees.
+Assessments: Define models for questions, answers, assessments, and results. You could store multiple-choice questions or open-ended questions.
+Notifications: Create models for different types of notifications, their content, and whether the user has seen the notification.
+
+2. Set Up Django Views and APIs
+Create Django views for rendering HTML templates for role-specific dashboards.
+Use Django REST Framework (DRF) to create APIs for interacting with course data, assessments, and user management.
+Use Django Channels to implement WebSocket consumers for real-time notifications.
+
+3. Implement Real-Time Notifications with WebSockets
+In the notifications/consumers.py file, define WebSocket consumers to listen for events like assessment submissions or status updates.
+Set up Django Channels in your project to handle WebSocket connections.
+Use Django Channels Layer for real-time communication, sending notifications to the client as soon as an event occurs (e.g., a trainee completes an assessment).
+
+4. Use Celery for Background Tasks
+Install Celery with Redis as a message broker.
+In the assessments/tasks.py file, write Celery tasks to process long-running operations, like grading assessments automatically or generating reports.
+Trigger Celery tasks in views or via signals whenever a long-running operation is needed.
+
+5. Build Frontend (React/Angular)
+Develop a frontend application that interacts with the Django API and WebSocket endpoints.
+Use React (or Angular) for dynamic UI, such as dashboards that update in real-time as new notifications or course updates occur.
+Implement state management (e.g., Redux for React) to manage data fetched from the backend and WebSocket events.
+
+6. User Authentication and Authorization
+Implement Django's authentication system, extended with role-based permissions using DRF’s permission classes or custom views.
+Use Django's built-in login/logout and session management features for authentication.
+
+7. Deploy the Application
+Use Docker to containerize the application and ensure easy deployment.
+Set up NGINX and Gunicorn (for HTTP) or Daphne (for WebSockets) as production servers.
+Set up PostgreSQL with proper indexing to ensure query performance.
+Use a CI/CD pipeline to streamline the deployment process.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
