@@ -540,4 +540,138 @@ Set up PostgreSQL with proper indexing to ensure query performance.
 Use a CI/CD pipeline to streamline the deployment process.
 
 
+--------------------------------------------------------_______________________________________________________________________________---------------------------------------------------------
+
+
+### Application Overview
+
+**ABS** (Automated Assessment System) is an application designed to streamline training and assessment processes within an organization. It supports both technical and non-technical training programs, allowing for efficient management of training sessions, assessments, and performance evaluations. Key features include batch-level and organization-level training assignments, post-training assessments, performance metrics evaluation, feedback sharing, and detailed management of trainers and trainees.
+
+### Roles and Use Cases
+
+#### 1. Admin
+
+**Responsibilities**:
+- Oversee batch management.
+- Manage groups of users.
+- Handle department records in coordination with the organization's Active Directory (AD).
+
+**Working Area**:
+- Admin interface for batch, group, and department management.
+
+**Covered Use Cases**:
+
+**Batch Management**:
+- **Handling Incoming Batches**: Admin handles new employee batches joining the organization and splits them across departments after the induction period. 
+  - **Types of Batches**: Initial batches (before department allocation) and department-specific batches.
+
+**Manage Groups**:
+- **Role Assignment**: Admin categorizes users into roles such as Co-ordinator, Trainee, and Trainer. Each role has specific privileges, e.g., Co-ordinators create training plans, Trainers prepare assessment questions.
+
+**Department Management**:
+- **Maintain Records**: Admin maintains records of individual departments. Given the frequent changes (e.g., department transfers, employee exits), this information is retrieved from the organization’s AD.
+
+**Not Covered**:
+- Direct involvement in training or assessments.
+
+#### 2. Co-ordinator
+
+**Responsibilities**:
+- Coordinate training programs.
+- Assign trainers and trainees.
+- Conduct and manage assessments.
+
+**Working Area**:
+- Co-ordinator dashboard for training and assessment management.
+
+**Covered Use Cases**:
+
+**Training Program Management**:
+- **Create Training Programs**: Co-ordinator creates training programs with general information, plans (topics and subtopics), duration, schedules assessments, and collects additional resources.
+
+**Trainee-Trainer Assign**:
+- **Assign Trainers and Trainees**: Co-ordinator assigns trainers and trainees to training programs at both department and organization levels.
+
+**Conduct Assessments**:
+- **Arrange Assessments**: Co-ordinator arranges assessments using pre-prepared Q&A datasets. They can shuffle questions, set pass/fail criteria, and assign batches and trainees.
+
+**Assessment Metrics**:
+- **Evaluate Performance**: Co-ordinator evaluates performance metrics such as attendance, pass/fail ratios, and identifies areas needing improvement.
+
+**Not Covered**:
+- Direct training delivery or content creation.
+
+#### 3. Trainer
+
+**Responsibilities**:
+- Track training progress.
+- Prepare and manage Q&A datasets.
+- Manually evaluate assessment results if needed.
+
+**Working Area**:
+- Trainer dashboard for session management and assessment preparation.
+
+**Covered Use Cases**:
+
+**Training Program Progress Tracker**:
+- **Update Session Progress**: Trainers update session attendance and upload reference materials used during sessions.
+
+**Q&A Preparations**:
+- **Create Q&A Datasets**: Trainers create questions (MCQs, multiple selection lists, code editors) and publish the datasets for assessments.
+
+**Manual Result Evaluation**:
+- **Evaluate Results**: Trainers manually review and update assessment results if questions/answers were incorrect, adding comments and updating scores.
+
+**Not Covered**:
+- Assigning trainees or conducting assessments.
+
+#### 4. Trainee
+
+**Responsibilities**:
+- Attend assessments.
+- Provide feedback on training and trainers.
+- Review assessment results.
+- Access training materials and upload mock projects.
+
+**Working Area**:
+- Trainee dashboard for assessment, feedback, and resource access.
+
+**Covered Use Cases**:
+
+**Assessment Attending**:
+- **Attend Assessments**: Trainees participate in assessments assigned after training, following provided guidelines.
+
+**Feedback Sharing**:
+- **Provide Feedback**: Trainees share feedback on sessions and trainers, which trainers can review.
+
+**Assessment Results**:
+- **Review Results**: Trainees view their assessment results, including scores, pass/fail status, and incorrect answers. They can download reports in various formats.
+
+**Training Resources**:
+- **Access and Upload Resources**: Trainees access training materials uploaded by trainers and can upload mock projects for review.
+
+**Not Covered**:
+- Creating training programs or managing groups.
+
+### Detailed Explanation
+
+**ABS** is designed to efficiently manage the entire training and assessment lifecycle within an organization. Here's how each role contributes to this process:
+
+**Admin** ensures the smooth onboarding of new employees, categorizing them into appropriate batches and roles, and maintaining up-to-date department records. They act as the backbone of the system, setting up the initial structure for training and assessment processes.
+
+**Co-ordinators** are pivotal in creating and managing training programs. They bridge the gap between trainers and trainees, ensuring that training programs are well-planned and assessments are properly conducted. Their role includes creating detailed training plans, assigning the right trainers and trainees, and analyzing assessment outcomes to continuously improve the training process.
+
+**Trainers** focus on delivering high-quality training and preparing assessment materials. They track the progress of their sessions, ensuring that trainees have access to all necessary resources. Their involvement in manual result evaluation helps maintain the accuracy and reliability of assessment results.
+
+**Trainees** are the end-users who benefit from the training programs. They actively participate in assessments, provide feedback to help improve future training sessions, and access a wealth of training materials to aid their learning. Their interaction with the system is designed to be straightforward, ensuring they can focus on learning and development.
+
+Each role in **ABS** is clearly defined to ensure that the system operates smoothly, facilitating a comprehensive and effective training and assessment process within the organization.
+
+
+
+
+
+
+
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------
